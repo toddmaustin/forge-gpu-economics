@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="FORGE compares the total cost of building a custom AI accelerator with buying vendor GPUs.">
+  <title>FORGE — Fabricate OR buy GPU Economics</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<div class="container">
+  <header>
+    <div><h1>FORGE</h1><p class="subtitle"><strong>Fabricate OR buy GPU Economics</strong> — an open, auditable BUILD-vs-BUY TCO model for AI infrastructure.</p></div>
+    <nav><a href="./docs/model.html">Model</a><a href="./docs/assumptions.html">Assumptions</a><a href="https://github.com/toddmaustin/forge-gpu-economics">Source</a></nav>
+  </header>
+  <div id="error"></div>
+  <section class="kpis">
+    <div class="kpi"><span>DECISION</span><strong id="decision">—</strong><small id="advantage">—</small></div>
+    <div class="kpi"><span>BUILD TCO</span><strong id="build-tco">—</strong></div>
+    <div class="kpi"><span>BUY TCO</span><strong id="buy-tco">—</strong></div>
+    <div class="kpi"><span>BREAK-EVEN FLEET</span><strong id="break-even">—</strong><small>year-1 vendor GPUs</small></div>
+  </section>
+  <div class="layout">
+    <main id="controls"></main>
+    <aside>
+      <section class="panel"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><h2>Fleet & hardware summary</h2><button id="reset">Reset defaults</button></div><div id="fleet-summary" class="summary-grid"></div></section>
+      <section class="panel"><h2>Cost composition</h2><div class="pies"><div><h3>BUILD</h3><div id="build-pie" class="pie-wrap"><div class="pie"></div><div class="legend"></div></div></div><div><h3>BUY</h3><div id="buy-pie" class="pie-wrap"><div class="pie"></div><div class="legend"></div></div></div></div></section>
+      <section class="panel"><h2>BUILD cost ledger</h2><table><thead><tr><th>Cost</th><th>Total</th><th>Share</th></tr></thead><tbody id="build-costs"></tbody></table></section>
+      <section class="panel"><h2>BUY cost ledger</h2><table><thead><tr><th>Cost</th><th>Total</th><th>Share</th></tr></thead><tbody id="buy-costs"></tbody></table></section>
+      <section class="panel callout"><h2>Sensitivity</h2><p style="color:var(--muted);font-size:13px">+20% one-at-a-time perturbation. Positive change favors BUILD; negative favors BUY.</p><div id="sensitivity"></div></section>
+    </aside>
+  </div>
+  <footer>FORGE is an engineering/economic scenario model, not a quote or forecast. Defaults are illustrative and should be replaced with project-specific assumptions.</footer>
+</div>
+<script type="module" src="./ui.js"></script>
+</body>
+</html>
