@@ -1,6 +1,6 @@
 # FORGE model
 
-FORGE (**Fabricate OR buy GPU Economics**) compares the total cost of building a custom AI accelerator with buying vendor GPUs. The definitions below establish the model inputs before the equations that use them. Defaults are illustrative rather than quotes or forecasts.
+FORGE (**Fabricate OR buy Gpu Economics**) compares the total cost of building a custom AI accelerator with buying vendor GPUs. The definitions below establish the model inputs before the equations that use them. Defaults are illustrative rather than quotes or forecasts.
 
 ## Assumptions and defaults
 

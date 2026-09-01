@@ -59,7 +59,7 @@ Issues and pull requests are welcome. For assumption changes, please include:
 
 To cite the use of this model (or a derivative), please use the following citation:
 
-Todd M. Austin, (2026). *FORGE: Fabricate OR buy GPU Economics* [Computer software]. GitHub. https://github.com/toddmaustin/forge-gpu-economics
+Todd M. Austin, (2026). *FORGE: Fabricate OR buy Gpu Economics* [Computer software]. GitHub. https://github.com/toddmaustin/forge-gpu-economics
 
 ## License
 
