@@ -55,8 +55,8 @@ test("browser entry points cache-bust the percentage-aware assets", () => {
   const index = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
   const ui = fs.readFileSync(new URL("../ui.js", import.meta.url), "utf8");
 
-  assert.match(index, /styles\.css\?v=1\.1\.1/);
-  assert.match(index, /ui\.js\?v=1\.1\.1/);
-  assert.match(ui, /model\.js\?v=1\.1\.1/);
+  assert.match(index, /styles\.css\?v=1\.1\.2/);
+  assert.match(index, /ui\.js\?v=1\.1\.2/);
+  assert.match(ui, /model\.js\?v=1\.1\.2/);
   assert.match(ui, /defaults\.json\?v=\$\{ASSET_VERSION\}/);
 });
