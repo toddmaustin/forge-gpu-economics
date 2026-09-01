@@ -1,6 +1,6 @@
-import { computeTCO, breakEvenFleet, sensitivity } from "./model.js?v=1.1.2";
+import { computeTCO, breakEvenFleet, sensitivity } from "./model.js?v=1.1.3";
 
-const ASSET_VERSION = "1.1.2";
+const ASSET_VERSION = "1.1.3";
 
 const $ = s => document.querySelector(s);
 const money = x => {
@@ -103,7 +103,8 @@ function currentInputs() {
   return x;
 }
 
-function renderPie(el, entries) {
+function renderPie(el, groups) {
+  const entries = groups.flatMap(([, groupEntries]) => groupEntries);
   const total = entries.reduce((s, [, v]) => s + v, 0);
   let start = 0;
   const colors = ["#2563eb", "#0f766e", "#9333ea", "#d97706", "#dc2626", "#0891b2", "#4f46e5", "#65a30d", "#7c3aed", "#be123c", "#475569", "#a16207"];
@@ -114,7 +115,13 @@ function renderPie(el, entries) {
     return s;
   }).join(",");
   el.querySelector(".pie").style.background = `conic-gradient(${stops})`;
-  el.querySelector(".legend").innerHTML = entries.map(([name, v], i) => `<div><i style="background:${colors[i % colors.length]}"></i><span>${name}</span><strong>${money(v)}</strong></div>`).join("");
+  let colorIndex = 0;
+  el.querySelector(".legend").innerHTML = groups.map(([groupName, groupEntries]) => `
+    <h4>${groupName}</h4>
+    ${groupEntries.map(([name, v]) => {
+      const color = colors[colorIndex++ % colors.length];
+      return `<div><i style="background:${color}"></i><span>${name}</span><strong>${money(v)}</strong></div>`;
+    }).join("")}`).join("");
 }
 
 function render() {
@@ -140,34 +147,42 @@ function render() {
       <div><span>Gross dies/wafer</span><strong>${y1.silicon.grossDiesPerWafer.toFixed(1)}</strong></div>
       <div><span>Good dies/wafer</span><strong>${y1.silicon.goodDiesPerWafer.toFixed(1)}</strong></div>`;
 
-    const buyEntries = [
-      ["Vendor GPUs incl. HBM", z.buy.vendorGPUsInclHBM],
-      ["Platform CAPEX", z.buy.platformCapex],
-      ["Power & cooling infrastructure", z.buy.powerCoolingInfrastructure],
-      ["Electricity", z.buy.electricity],
-      ["Facility cost", z.buy.facilityCost],
-      ["Software/support", z.buy.softwareSupport]
+    const buyGroups = [
+      ["Device cost", [
+        ["Vendor GPUs incl. HBM", z.buy.vendorGPUsInclHBM]
+      ]],
+      ["Common data center costs", [
+        ["Platform CAPEX", z.buy.platformCapex],
+        ["Power & cooling infrastructure", z.buy.powerCoolingInfrastructure],
+        ["Electricity", z.buy.electricity],
+        ["Facility cost", z.buy.facilityCost],
+        ["Software/support", z.buy.softwareSupport]
+      ]]
     ];
-    const buildEntries = [
-      ["Design NRE", z.build.designNRE],
-      ["Platform CAPEX", z.build.platformCapex],
-      ["HBM", z.build.hbm],
-      ["Power & cooling infrastructure", z.build.powerCoolingInfrastructure],
-      ["Facility cost", z.build.facilityCost],
-      ["Electricity", z.build.electricity],
-      ["Initial software NRE", z.build.initialSoftwareNRE],
-      ["Ongoing software", z.build.ongoingSoftware],
-      ["Package/interposer", z.build.packageInterposer],
-      ["Board/VRM/test", z.build.boardVrmTest],
-      ["Logic silicon", z.build.logicSilicon],
-      ["Mask/process NRE", z.build.maskProcessNRE]
+    const buildGroups = [
+      ["Device cost", [
+        ["Design NRE", z.build.designNRE],
+        ["HBM", z.build.hbm],
+        ["Package/interposer", z.build.packageInterposer],
+        ["Board/VRM/test", z.build.boardVrmTest],
+        ["Logic silicon", z.build.logicSilicon],
+        ["Mask/process NRE", z.build.maskProcessNRE]
+      ]],
+      ["Common data center costs", [
+        ["Platform CAPEX", z.build.platformCapex],
+        ["Power & cooling infrastructure", z.build.powerCoolingInfrastructure],
+        ["Electricity", z.build.electricity],
+        ["Facility cost", z.build.facilityCost],
+        ["Software/support", z.build.initialSoftwareNRE + z.build.ongoingSoftware]
+      ]]
     ];
-    renderPie($("#buy-pie"), buyEntries);
-    renderPie($("#build-pie"), buildEntries);
+    renderPie($("#buy-pie"), buyGroups);
+    renderPie($("#build-pie"), buildGroups);
 
     const rows = (entries, total) => entries.map(([name, v]) => `<tr><td>${name}</td><td>${money(v)}</td><td>${(100 * v / total).toFixed(1)}%</td></tr>`).join("");
-    $("#buy-costs").innerHTML = rows(buyEntries, z.buyTCO) + `<tr class="total"><td>Total BUY TCO</td><td>${money(z.buyTCO)}</td><td>100%</td></tr>`;
-    $("#build-costs").innerHTML = rows(buildEntries, z.buildTCO) + `<tr class="total"><td>Total BUILD TCO</td><td>${money(z.buildTCO)}</td><td>100%</td></tr>`;
+    const groupedRows = (groups, total) => groups.map(([name, entries]) => `<tr class="cost-group"><th colspan="3">${name}</th></tr>${rows(entries, total)}`).join("");
+    $("#buy-costs").innerHTML = groupedRows(buyGroups, z.buyTCO) + `<tr class="total"><td>Total BUY TCO</td><td>${money(z.buyTCO)}</td><td>100%</td></tr>`;
+    $("#build-costs").innerHTML = groupedRows(buildGroups, z.buildTCO) + `<tr class="total"><td>Total BUILD TCO</td><td>${money(z.buildTCO)}</td><td>100%</td></tr>`;
 
     try {
       const s = sensitivity(x);
