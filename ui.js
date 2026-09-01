@@ -1,6 +1,6 @@
-import { computeTCO, breakEvenFleet, sensitivity } from "./model.js?v=1.1.0";
+import { computeTCO, breakEvenFleet, sensitivity } from "./model.js?v=1.1.1";
 
-const ASSET_VERSION = "1.1.0";
+const ASSET_VERSION = "1.1.1";
 
 const $ = s => document.querySelector(s);
 const money = x => {
