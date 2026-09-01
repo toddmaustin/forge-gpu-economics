@@ -17,6 +17,17 @@ test("baseline TCO remains close to documented values", () => {
   assert.equal(z.decision, "BUILD");
 });
 
+test("cost type totals split one-time CapEx from recurring OpEx", () => {
+  const z = computeTCO(defaults);
+
+  assert.equal(z.buyCostTypes.capex, z.buy.vendorGPUsInclHBM + z.buy.platformCapex + z.buy.facilityCost);
+  assert.equal(z.buyCostTypes.opex, z.buy.electricity + z.buy.powerCoolingInfrastructure + z.buy.softwareSupport);
+  assert.equal(z.buildCostTypes.capex, z.buildTCO - z.buildCostTypes.opex);
+  assert.equal(z.buildCostTypes.opex, z.build.electricity + z.build.powerCoolingInfrastructure + z.build.ongoingSoftware);
+  assert.ok(Math.abs(z.buyCostTypes.capex + z.buyCostTypes.opex - z.buyTCO) < 1e-6);
+  assert.ok(Math.abs(z.buildCostTypes.capex + z.buildCostTypes.opex - z.buildTCO) < 1e-6);
+});
+
 test("custom fleet is normalized by performance ratio", () => {
   const z = computeTCO(defaults);
   assert.ok(Math.abs(z.yearly[0].customCount - defaults.fleet_year1 / defaults.custom_performance_ratio) < 1e-8);
@@ -55,8 +66,8 @@ test("browser entry points cache-bust the current assets", () => {
   const index = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
   const ui = fs.readFileSync(new URL("../ui.js", import.meta.url), "utf8");
 
-  assert.match(index, /styles\.css\?v=1\.1\.3/);
-  assert.match(index, /ui\.js\?v=1\.1\.3/);
-  assert.match(ui, /model\.js\?v=1\.1\.3/);
+  assert.match(index, /styles\.css\?v=1\.1\.4/);
+  assert.match(index, /ui\.js\?v=1\.1\.4/);
+  assert.match(ui, /model\.js\?v=1\.1\.4/);
   assert.match(ui, /defaults\.json\?v=\$\{ASSET_VERSION\}/);
 });

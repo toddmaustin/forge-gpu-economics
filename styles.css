@@ -37,6 +37,8 @@ button { border:1px solid var(--line); border-radius:9px; padding:10px 14px; bac
 .legend h4:first-child { margin-top:0; }
 .legend div { display:grid; grid-template-columns:10px 1fr auto; gap:7px; align-items:center; margin:5px 0; }
 .legend i { width:9px; height:9px; border-radius:2px; }
+.legend .cost-type-summary { display:flex; grid-template-columns:none; flex-wrap:wrap; gap:4px 14px; margin-top:10px; padding-top:9px; border-top:1px solid var(--line); color:var(--muted); }
+.cost-type-summary b { color:var(--text); }
 table { width:100%; border-collapse:collapse; font-size:13px; }
 th,td { text-align:left; padding:8px 7px; border-top:1px solid var(--line); }
 th:nth-child(n+2),td:nth-child(n+2) { text-align:right; }

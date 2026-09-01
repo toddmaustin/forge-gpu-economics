@@ -1,6 +1,6 @@
-import { computeTCO, breakEvenFleet, sensitivity } from "./model.js?v=1.1.3";
+import { computeTCO, breakEvenFleet, sensitivity } from "./model.js?v=1.1.4";
 
-const ASSET_VERSION = "1.1.3";
+const ASSET_VERSION = "1.1.4";
 
 const $ = s => document.querySelector(s);
 const money = x => {
@@ -104,7 +104,7 @@ function currentInputs() {
   return x;
 }
 
-function renderPie(el, groups) {
+function renderPie(el, groups, costTypes) {
   const entries = groups.flatMap(([, groupEntries]) => groupEntries);
   const total = entries.reduce((s, [, v]) => s + v, 0);
   let start = 0;
@@ -148,7 +148,11 @@ function renderPie(el, groups) {
     ${groupEntries.map(([name, v]) => {
       const color = colors[colorIndex++ % colors.length];
       return `<div><i style="background:${color}"></i><span>${name}</span><strong>${money(v)}</strong></div>`;
-    }).join("")}`).join("");
+    }).join("")}`).join("") + `
+    <div class="cost-type-summary">
+      <span><b>CapEx</b> (one-time): ${money(costTypes.capex)} (${(100 * costTypes.capex / total).toFixed(1)}%)</span>
+      <span><b>OpEx</b> (recurring): ${money(costTypes.opex)} (${(100 * costTypes.opex / total).toFixed(1)}%)</span>
+    </div>`;
 }
 
 function render() {
@@ -205,8 +209,8 @@ function render() {
         ["Software/support", z.build.initialSoftwareNRE + z.build.ongoingSoftware]
       ]]
     ];
-    renderPie($("#buy-pie"), buyGroups);
-    renderPie($("#build-pie"), buildGroups);
+    renderPie($("#buy-pie"), buyGroups, z.buyCostTypes);
+    renderPie($("#build-pie"), buildGroups, z.buildCostTypes);
 
     const rows = (entries, total) => entries.map(([name, v]) => `<tr><td>${name}</td><td>${money(v)}</td><td>${(100 * v / total).toFixed(1)}%</td></tr>`).join("");
     const groupedRows = (groups, total) => groups.map(([name, entries]) => `<tr class="cost-group"><th colspan="3">${groupLabel(name, entries)}</th></tr>${rows(entries, total)}`).join("");
