@@ -30,6 +30,60 @@
       <section class="panel callout"><h2>Sensitivity</h2><p style="color:var(--muted);font-size:13px">+20% one-at-a-time perturbation. Positive change favors BUILD; negative favors BUY.</p><div id="sensitivity"></div></section>
     </aside>
   </div>
+  <section class="panel parameter-glossary" aria-labelledby="parameter-glossary-title">
+    <h2 id="parameter-glossary-title">Model parameter glossary</h2>
+    <p>Definitions and illustrative defaults for every calculator input. Useful performance should be measured at the required workload and SLA, not from peak FLOPS.</p>
+    <div class="glossary-table-wrap"><table>
+      <thead><tr><th>Symbol</th><th>Parameter</th><th>Default</th><th>Definition</th></tr></thead>
+      <tbody>
+        <tr class="cost-group"><th colspan="4">Fleet &amp; performance</th></tr>
+        <tr><td><var>N<sub>0</sub></var></td><td>Year-1 vendor GPU fleet</td><td>50,000</td><td>Vendor GPUs required to satisfy the first year's workload.</td></tr>
+        <tr><td><var>g<sub>D</sub></var></td><td>Demand growth / year</td><td>20%</td><td>Annual growth in required useful compute.</td></tr>
+        <tr><td><var>H</var></td><td>TCO horizon</td><td>4 years</td><td>Number of years included in the analysis.</td></tr>
+        <tr><td><var>R<sub>P</sub></var></td><td>Custom useful performance</td><td>1.5× vendor</td><td>Custom-to-vendor throughput ratio for the actual workload and SLA.</td></tr>
+        <tr><td><var>C<sub>V,0</sub></var></td><td>Vendor GPU price incl. HBM</td><td>$35,000</td><td>Complete initial vendor GPU acquisition price; vendor HBM is included.</td></tr>
+        <tr><td><var>g<sub>V</sub></var></td><td>Vendor GPU price change / year</td><td>0%</td><td>Annual change applied to the vendor GPU price.</td></tr>
+        <tr class="cost-group"><th colspan="4">HBM architecture</th></tr>
+        <tr><td><var>p<sub>H,0</sub></var></td><td>Custom HBM price</td><td>$14.50/GB</td><td>Initial HBM acquisition price on the BUILD side.</td></tr>
+        <tr><td><var>g<sub>H</sub></var></td><td>HBM price change / year</td><td>0%</td><td>Annual change applied to custom HBM pricing.</td></tr>
+        <tr><td><var>S<sub>C</sub></var></td><td>Custom HBM stacks</td><td>8</td><td>Number of HBM stacks per custom accelerator.</td></tr>
+        <tr><td><var>G<sub>C</sub></var></td><td>Custom GB / stack</td><td>36 GB</td><td>Memory capacity of each custom-device HBM stack.</td></tr>
+        <tr><td><var>B<sub>C</sub></var></td><td>Custom bandwidth / stack</td><td>1.18 TB/s</td><td>Descriptive bandwidth of each custom-device HBM stack.</td></tr>
+        <tr><td><var>O<sub>H</sub></var></td><td>Custom HBM overhead</td><td>5%</td><td>Procurement and scrap allowance added to custom HBM cost.</td></tr>
+        <tr><td><var>S<sub>V</sub></var></td><td>Vendor HBM stacks</td><td>8</td><td>Number of HBM stacks per vendor GPU.</td></tr>
+        <tr><td><var>G<sub>V</sub></var></td><td>Vendor GB / stack</td><td>36 GB</td><td>Memory capacity of each vendor-device HBM stack.</td></tr>
+        <tr><td><var>B<sub>V</sub></var></td><td>Vendor bandwidth / stack</td><td>1.18 TB/s</td><td>Descriptive bandwidth of each vendor-device HBM stack.</td></tr>
+        <tr><td><var>P<sub>H</sub></var></td><td>HBM power / stack</td><td>60 W</td><td>Operating power attributed to one HBM stack.</td></tr>
+        <tr class="cost-group"><th colspan="4">Power</th></tr>
+        <tr><td><var>P<sub>V</sub></var></td><td>Vendor GPU power excl. HBM</td><td>720 W</td><td>Vendor logic and module power before HBM and host/network power.</td></tr>
+        <tr><td><var>P<sub>C</sub></var></td><td>Custom accelerator power excl. HBM</td><td>400 W</td><td>Custom logic and module power before HBM and host/network power.</td></tr>
+        <tr><td><var>P<sub>S</sub></var></td><td>Host/network power / device</td><td>250 W</td><td>Associated CPU, networking, and system power per compute device.</td></tr>
+        <tr class="cost-group"><th colspan="4">Logic process &amp; manufacturing</th></tr>
+        <tr><td>—</td><td>Foundry</td><td>TSMC</td><td>Descriptive custom-logic manufacturer.</td></tr>
+        <tr><td>—</td><td>Process/node</td><td>N3 / N3E</td><td>Descriptive custom-logic fabrication process.</td></tr>
+        <tr><td><var>D</var></td><td>Wafer diameter</td><td>300 mm</td><td>Diameter used in the dies-per-wafer approximation.</td></tr>
+        <tr><td><var>C<sub>W,0</sub></var></td><td>Wafer price</td><td>$20,000</td><td>Initial acquisition cost of one logic wafer.</td></tr>
+        <tr><td><var>g<sub>W</sub></var></td><td>Wafer price change / year</td><td>0%</td><td>Annual change applied to wafer pricing.</td></tr>
+        <tr><td><var>A<sub>D</sub></var></td><td>Compute die area</td><td>775 mm²</td><td>Area of the custom accelerator logic die.</td></tr>
+        <tr><td><var>Y<sub>L</sub></var></td><td>Known-good logic yield</td><td>55%</td><td>Fraction of gross dies expected to be usable.</td></tr>
+        <tr><td><var>C<sub>M</sub></var></td><td>Mask/process tooling NRE</td><td>$15M</td><td>One-time masks, tapeout, and process-tooling cost.</td></tr>
+        <tr class="cost-group"><th colspan="4">Packaging &amp; engineering</th></tr>
+        <tr><td><var>C<sub>P</sub></var></td><td>Advanced package/interposer</td><td>$1,500</td><td>Package and interposer cost for each assembly attempt.</td></tr>
+        <tr><td><var>Y<sub>P</sub></var></td><td>Final package yield</td><td>90%</td><td>Fraction of logic, HBM, and package assemblies that produce a finished device.</td></tr>
+        <tr><td><var>C<sub>B</sub></var></td><td>Board, VRM &amp; final test</td><td>$1,200</td><td>Module completion cost applied after package yield.</td></tr>
+        <tr><td><var>C<sub>D</sub></var></td><td>Design NRE</td><td>$650M</td><td>One-time architecture, RTL, verification, and physical-design effort.</td></tr>
+        <tr><td><var>C<sub>SW0</sub></var></td><td>Initial software NRE</td><td>$135M</td><td>One-time compiler, runtime, and software development effort.</td></tr>
+        <tr><td><var>C<sub>SWC</sub></var></td><td>Ongoing custom software</td><td>$30M/year</td><td>Fleet-wide recurring custom software engineering cost.</td></tr>
+        <tr class="cost-group"><th colspan="4">Datacenter economics</th></tr>
+        <tr><td><var>c<sub>E</sub></var></td><td>Electricity</td><td>$0.07/kWh</td><td>Price of energy actually consumed.</td></tr>
+        <tr><td><var>PUE</var></td><td>Power usage effectiveness</td><td>1.15</td><td>Ratio of total facility energy to IT equipment energy.</td></tr>
+        <tr><td><var>C<sub>S</sub></var></td><td>Platform CAPEX / device</td><td>$9,000</td><td>Server, rack, network, and other IT hardware around each compute device.</td></tr>
+        <tr><td><var>C<sub>F</sub></var></td><td>Facility cost / deployed device</td><td>$3,000</td><td>One-time building, site, and general-facility allocation.</td></tr>
+        <tr><td><var>c<sub>PC</sub></var></td><td>Power &amp; cooling capacity</td><td>$900/IT-kW-year</td><td>Annualized electrical and heat-removal plant capacity charge.</td></tr>
+        <tr><td><var>C<sub>SWV</sub></var></td><td>Vendor software/support</td><td>$500/GPU-year</td><td>Recurring vendor support and software cost per GPU.</td></tr>
+      </tbody>
+    </table></div>
+  </section>
   <footer>FORGE is an engineering/economic scenario model, not a quote or forecast. Defaults are illustrative and should be replaced with project-specific assumptions.</footer>
 </div>
 <script type="module" src="./ui.js?v=1.1.4"></script>
