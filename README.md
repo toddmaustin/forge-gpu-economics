@@ -1,4 +1,4 @@
-# FORGE — Fabricate OR buy GPU Economics
+# FORGE — Fabricate OR buy Gpu Economics
 
 **FORGE** is an open, browser-based economic model for deciding whether to **BUILD a custom AI accelerator** or **BUY vendor GPUs** for large AI datacenter deployments.
 
@@ -20,29 +20,9 @@ It connects computer-architecture assumptions — useful performance, die size/y
 - BUILD-vs-BUY break-even fleet
 - One-at-a-time sensitivity analysis
 
-## Run locally
+## Access the model online
 
-Because the UI loads `defaults.json`, serve the directory through a tiny local web server:
-
-```bash
-python -m http.server 8000
-```
-
-Then open `http://localhost:8000`.
-
-No package installation, database, API key, or backend is required.
-
-## Publish with GitHub Pages
-
-1. Create a public repository named `forge-gpu-economics`.
-2. Put the contents of this directory at the repository root.
-3. Push to the `main` branch.
-4. In **Settings → Pages**, choose **Deploy from a branch**.
-5. Select **main** and **/(root)**, then save.
-
-For the GitHub user `toddmaustin`, the expected URL is:
-
-`https://toddmaustin.github.io/forge-gpu-economics/`
+[Access the model online](https://toddmaustin.github.io/forge-gpu-economics/)
 
 ## Repository structure
 
@@ -58,20 +38,9 @@ forge-gpu-economics/
 │   └── assumptions.md      Default rationale and limitations
 ├── tests/
 │   └── model.test.js       Regression/unit tests
-├── CITATION.cff
 ├── LICENSE
 └── README.md
 ```
-
-## Default result
-
-With the shipped illustrative baseline, FORGE estimates approximately:
-
-- **BUY TCO:** $4.820B
-- **BUILD TCO:** $2.416B
-- **BUILD advantage:** $2.404B
-
-These numbers are not a market quote or investment forecast. They are the output of editable engineering assumptions in `defaults.json`.
 
 ## Methodology
 
@@ -86,6 +55,12 @@ Issues and pull requests are welcome. For assumption changes, please include:
 - date/context,
 - source or derivation,
 - whether it affects BUILD, BUY, or both.
+
+## Citing This Model
+
+To cite the use of this model (or a derivative), please use the following citation:
+
+Todd M. Austin, "FORGE: Fabricate OR buy GPU Economics", https://github.com/toddmaustin/forge-gpu-economics
 
 ## License
 
