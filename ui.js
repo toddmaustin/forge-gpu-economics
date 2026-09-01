@@ -11,6 +11,7 @@ const money = x => {
   return `$${x.toFixed(0)}`;
 };
 const num = x => Math.round(x).toLocaleString();
+const groupLabel = (name, entries) => `${name} (${money(entries.reduce((sum, [, value]) => sum + value, 0))})`;
 
 const groups = [
   ["Fleet & performance", [
@@ -117,7 +118,7 @@ function renderPie(el, groups) {
   el.querySelector(".pie").style.background = `conic-gradient(${stops})`;
   let colorIndex = 0;
   el.querySelector(".legend").innerHTML = groups.map(([groupName, groupEntries]) => `
-    <h4>${groupName}</h4>
+    <h4>${groupLabel(groupName, groupEntries)}</h4>
     ${groupEntries.map(([name, v]) => {
       const color = colors[colorIndex++ % colors.length];
       return `<div><i style="background:${color}"></i><span>${name}</span><strong>${money(v)}</strong></div>`;
@@ -180,7 +181,7 @@ function render() {
     renderPie($("#build-pie"), buildGroups);
 
     const rows = (entries, total) => entries.map(([name, v]) => `<tr><td>${name}</td><td>${money(v)}</td><td>${(100 * v / total).toFixed(1)}%</td></tr>`).join("");
-    const groupedRows = (groups, total) => groups.map(([name, entries]) => `<tr class="cost-group"><th colspan="3">${name}</th></tr>${rows(entries, total)}`).join("");
+    const groupedRows = (groups, total) => groups.map(([name, entries]) => `<tr class="cost-group"><th colspan="3">${groupLabel(name, entries)}</th></tr>${rows(entries, total)}`).join("");
     $("#buy-costs").innerHTML = groupedRows(buyGroups, z.buyTCO) + `<tr class="total"><td>Total BUY TCO</td><td>${money(z.buyTCO)}</td><td>100%</td></tr>`;
     $("#build-costs").innerHTML = groupedRows(buildGroups, z.buildTCO) + `<tr class="total"><td>Total BUILD TCO</td><td>${money(z.buildTCO)}</td><td>100%</td></tr>`;
 
