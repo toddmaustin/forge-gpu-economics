@@ -1,46 +1,76 @@
 # Assumptions and defaults
 
-FORGE ships with an **illustrative 2026 baseline**, not a price quote. Users should replace defaults with project-specific values.
+FORGE ships with an **illustrative 2026 baseline**, not a price quote or forecast. Users should replace every default with project-specific measurements or estimates. The machine-readable source of truth is [`defaults.json`](../defaults.json); yield inputs are numeric percentages greater than 0 and no more than 100.
 
-The machine-readable source of truth is [`defaults.json`](../defaults.json).
-Yield inputs in that file and in the calculator are numeric percentages from greater than 0 through 100.
+## Fleet and performance defaults
 
-## Current baseline
+| Assumption | Default | Interpretation |
+|---|---:|---|
+| Year-1 vendor GPU fleet | 50,000 | Vendor GPUs required for year-1 useful compute. |
+| Demand growth | 20%/year | Useful-compute demand compounds annually. |
+| TCO horizon | 4 years | Costs are summed without discounting. |
+| Custom useful performance | 1.5× vendor GPU | Real workload throughput at the required SLA, not peak FLOPS. |
+| Vendor GPU including HBM | $35,000 | Complete acquisition price; vendor HBM is not separately costed. |
+| Vendor GPU price change | 0%/year | No baseline price escalation or decline. |
 
-| Assumption | Default |
-|---|---:|
-| Year-1 vendor GPU fleet | 50,000 |
-| Demand growth | 20%/year |
-| Horizon | 4 years |
-| Custom useful performance | 1.5× vendor GPU |
-| Vendor GPU incl. HBM | $35,000 |
-| Custom HBM | $14.50/GB |
-| Custom/vendor HBM | 8 × 36 GB |
-| HBM power | 60 W/stack |
-| Vendor logic power excl. HBM | 720 W |
-| Custom logic power excl. HBM | 400 W |
-| Host/network power | 250 W/device |
-| Wafer | 300 mm, $20,000 |
-| Die area | 775 mm² |
-| Known-good logic yield | 55% |
-| Package yield | 90% |
-| Design NRE | $650M |
-| Initial software NRE | $135M |
-| Ongoing custom software | $30M/year |
-| Electricity | $0.07/kWh |
-| PUE | 1.15 |
-| Platform CAPEX | $9,000/device |
-| Facility cost | $3,000/deployed device |
-| Power & cooling infrastructure capacity | $900/IT-kW-year |
-| Vendor software/support | $500/GPU-year |
+## HBM and power defaults
 
-## Datacenter cost boundaries
+| Assumption | Default | Interpretation |
+|---|---:|---|
+| Custom HBM price | $14.50/GB | BUILD-side initial HBM acquisition price. |
+| Custom HBM price change | 0%/year | No baseline price escalation or decline. |
+| Custom HBM | 8 stacks × 36 GB × 1.18 TB/s | 288 GB and 9.44 TB/s per custom device. |
+| Vendor HBM | 8 stacks × 36 GB × 1.18 TB/s | 288 GB and 9.44 TB/s per vendor device. |
+| Custom HBM overhead | 5% | Procurement/scrap allowance. |
+| HBM power | 60 W/stack | Adds 480 W to either eight-stack device. |
+| Vendor logic/module power excluding HBM | 720 W | Excludes HBM and host/network allocation. |
+| Custom logic/module power excluding HBM | 400 W | Excludes HBM and host/network allocation. |
+| Host/network power | 250 W/device | CPU, network, and associated system allocation. |
 
-**Platform CAPEX / deployed device** is intended to represent non-accelerator IT hardware: host/server chassis, CPU and system memory allocation, PSUs, NICs, rack hardware, local switching/cabling, and similar equipment.
+HBM bandwidth is descriptive. Its performance effect is represented only through the custom useful-performance ratio.
 
-**Facility cost / deployed device** is a one-time building/site/general-facility allocation. The $3,000 default is a rough engineering estimate intended to separate non-MEP facility construction from the power/cooling term below. It does not currently model land as an independent input.
+## Logic manufacturing defaults
 
-**Power & cooling infrastructure capacity** is an annualized $/IT-kW-year charge for datacenter electrical and cooling plant. It is distinct from electricity consumption.
+| Assumption | Default | Interpretation |
+|---|---:|---|
+| Foundry | TSMC | Descriptive; it does not independently change an equation. |
+| Process/node | N3 / N3E (3 nm class) | Descriptive; economics enter through wafer, area, and yield inputs. |
+| Wafer diameter | 300 mm | Used by the approximate dies-per-wafer equation. |
+| Initial wafer price | $20,000 | Cost per wafer in year 1. |
+| Wafer price change | 0%/year | No baseline price escalation or decline. |
+| Compute die area | 775 mm² | Custom logic die area. |
+| Known-good logic yield | 55% | Usable fraction of approximate gross dies. |
+| Mask/process tooling NRE | $15M | One-time masks, tapeout, and tooling. |
+
+## Packaging and engineering defaults
+
+| Assumption | Default | Interpretation |
+|---|---:|---|
+| Advanced package/interposer | $1,500/attempt | Enters the package-yield-adjusted BOM. |
+| Final package yield | 90% | Logic, HBM, and package cost are divided by this yield. |
+| Board, VRM, and final test | $1,200/device | Added after the package-yield term. |
+| Design NRE | $650M | Architecture, RTL, verification, and physical design. |
+| Initial software NRE | $135M | One-time compiler/runtime/software development. |
+| Ongoing custom software | $30M/year | Fleet-wide recurring effort, not per-device cost. |
+
+## Datacenter economics defaults
+
+| Assumption | Default | Interpretation |
+|---|---:|---|
+| Electricity | $0.07/kWh | Energy actually consumed. |
+| PUE | 1.15 | Total facility energy divided by IT energy. |
+| Platform CAPEX | $9,000/device | Non-accelerator IT platform hardware. |
+| Facility cost | $3,000/deployed device | One-time general building/site allocation. |
+| Power/cooling infrastructure capacity | $900/IT-kW-year | Recurring annualized plant-capacity charge. |
+| Vendor software/support | $500/GPU-year | Recurring per-vendor-GPU cost. |
+
+### Datacenter cost boundaries
+
+**Platform CAPEX / deployed device** represents host/server chassis, CPU and system memory allocation, PSUs, NICs, rack hardware, local switching/cabling, and similar non-accelerator IT equipment.
+
+**Facility cost / deployed device** is a one-time building/site/general-facility allocation. The $3,000 default is a rough engineering estimate separating non-MEP construction from the power/cooling term. Land is not modeled independently.
+
+**Power and cooling infrastructure capacity** is an annualized electrical and cooling plant charge. It is distinct from both facility CAPEX and consumed electricity.
 
 For construction-cost context, see:
 - Turner & Townsend, *Data Centre Construction Cost Index 2025*: https://reports.turnerandtownsend.com/data-centre-construction-cost-index-2025/data-centre-cost-trends
@@ -49,12 +79,10 @@ For construction-cost context, see:
 ## Important limitations
 
 - No discount rate or NPV.
-- No explicit utilization/load factor; the model currently assumes the modeled IT power is continuously incurred over 8760 hours/year.
-- No development lead-time penalty.
-- No execution-risk reserve.
+- No explicit utilization/load factor; modeled IT power is continuously incurred for 8,760 hours/year.
+- No development lead-time penalty or execution-risk reserve.
 - No vendor roadmap/performance progression.
 - No explicit equipment replacement/failure rate.
-- No land-cost parameter.
-- HBM bandwidth is descriptive; performance impact must be reflected in the useful-performance ratio.
+- No independent land-cost parameter.
 - Yield is an input rather than a defect-density model.
-- Dies-per-wafer is an approximation and does not explicitly model die aspect ratio, scribe lanes, or wafer-edge exclusion.
+- Dies per wafer is an approximation without explicit die aspect ratio, scribe lanes, or wafer-edge exclusion.
