@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { computeTCO, grossDiesPerWafer, breakEvenFleet } from "../model.js";
+import { computeTCO, grossDiesPerWafer, breakEvenFleet, normalizeInputs, sensitivity } from "../model.js";
 
 const defaults = JSON.parse(fs.readFileSync(new URL("../defaults.json", import.meta.url), "utf8"));
 
@@ -34,4 +34,28 @@ test("break-even fleet returns a finite positive threshold", () => {
   const be = breakEvenFleet(defaults);
   assert.equal(be.type, "value");
   assert.ok(be.fleet > 0 && Number.isFinite(be.fleet));
+});
+
+test("sensitivity analysis renders valid finite perturbations", () => {
+  const results = sensitivity(defaults);
+
+  assert.equal(results.length, 28);
+  assert.ok(results.every(({ delta, advantage }) => Number.isFinite(delta) && Number.isFinite(advantage)));
+  assert.ok(results.some(({ key }) => key === "package_yield"));
+});
+
+test("yields are accepted as percentages from 0 to 100", () => {
+  const normalized = normalizeInputs(defaults);
+  assert.equal(normalized.logic_yield, 0.55);
+  assert.equal(normalized.package_yield, 0.9);
+  assert.throws(() => normalizeInputs({ ...defaults, package_yield: 101 }), /no more than 100/);
+});
+
+test("browser entry points cache-bust the percentage-aware assets", () => {
+  const index = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const ui = fs.readFileSync(new URL("../ui.js", import.meta.url), "utf8");
+
+  assert.match(index, /ui\.js\?v=1\.1\.0/);
+  assert.match(ui, /model\.js\?v=1\.1\.0/);
+  assert.match(ui, /defaults\.json\?v=\$\{ASSET_VERSION\}/);
 });

@@ -1,4 +1,6 @@
-import { computeTCO, breakEvenFleet, sensitivity } from "./model.js";
+import { computeTCO, breakEvenFleet, sensitivity } from "./model.js?v=1.1.0";
+
+const ASSET_VERSION = "1.1.0";
 
 const $ = s => document.querySelector(s);
 const money = x => {
@@ -41,12 +43,12 @@ const groups = [
     ["wafer_price", "Wafer price", "currency", 500],
     ["wafer_price_growth", "Wafer price change / year", "percent", 1],
     ["die_area_mm2", "Compute die area (mm²)", "number", 5],
-    ["logic_yield", "Known-good logic yield", "percent", 1],
+    ["logic_yield", "Known-good logic yield", "percentage", 1],
     ["mask_process_nre", "Mask/process tooling NRE", "currency", 1000000]
   ]],
   ["Packaging & NRE", [
     ["package_interposer_cost", "Advanced package/interposer", "currency", 100],
-    ["package_yield", "Final package yield", "percent", 1],
+    ["package_yield", "Final package yield", "percentage", 1],
     ["board_vrm_test_cost", "Board, VRM & final test", "currency", 100],
     ["design_nre", "Architecture / RTL / verification / PD NRE", "currency", 25000000],
     ["initial_software_nre", "Compiler/software initial NRE", "currency", 5000000],
@@ -85,8 +87,9 @@ function buildControls() {
     for (const [key, label, kind, step] of fields) {
       const wrap = document.createElement("label");
       wrap.className = "control";
-      const suffix = kind === "percent" ? " (%)" : kind === "years" ? " (years)" : kind === "ratio" ? " (×)" : "";
-      wrap.innerHTML = `<span>${label}${suffix}</span><input data-key="${key}" data-kind="${kind}" type="number" step="${step}" value="${displayValue(defaults[key], kind)}">`;
+      const suffix = kind === "percent" || kind === "percentage" ? " (%)" : kind === "years" ? " (years)" : kind === "ratio" ? " (×)" : "";
+      const bounds = kind === "percentage" ? ' min="0" max="100"' : "";
+      wrap.innerHTML = `<span>${label}${suffix}</span><input data-key="${key}" data-kind="${kind}" type="number" step="${step}"${bounds} value="${displayValue(defaults[key], kind)}">`;
       grid.appendChild(wrap);
     }
     root.appendChild(section);
@@ -166,16 +169,22 @@ function render() {
     $("#buy-costs").innerHTML = rows(buyEntries, z.buyTCO) + `<tr class="total"><td>Total BUY TCO</td><td>${money(z.buyTCO)}</td><td>100%</td></tr>`;
     $("#build-costs").innerHTML = rows(buildEntries, z.buildTCO) + `<tr class="total"><td>Total BUILD TCO</td><td>${money(z.buildTCO)}</td><td>100%</td></tr>`;
 
-    const s = sensitivity(x);
-    const max = Math.max(...s.map(v => Math.abs(v.delta)), 1);
-    $("#sensitivity").innerHTML = s.map((v, i) => `<div class="sens-row"><div><span>${i + 1}. ${v.label}</span><strong>${v.delta >= 0 ? "+" : ""}${money(v.delta)}</strong></div><div class="bar"><b style="width:${Math.max(1, 100 * Math.abs(v.delta) / max)}%"></b></div></div>`).join("");
+    try {
+      const s = sensitivity(x);
+      const max = Math.max(...s.map(v => Math.abs(v.delta)), 1);
+      $("#sensitivity").classList.remove("sens-error");
+      $("#sensitivity").innerHTML = s.map((v, i) => `<div class="sens-row"><div><span>${i + 1}. ${v.label}</span><strong>${v.delta >= 0 ? "+" : ""}${money(v.delta)}</strong></div><div class="bar"><b style="width:${Math.max(1, 100 * Math.abs(v.delta) / max)}%"></b></div></div>`).join("");
+    } catch (e) {
+      $("#sensitivity").classList.add("sens-error");
+      $("#sensitivity").textContent = `Sensitivity unavailable: ${e.message}`;
+    }
   } catch (e) {
     $("#error").textContent = e.message;
   }
 }
 
 async function init() {
-  defaults = await fetch("./defaults.json").then(r => r.json());
+  defaults = await fetch(`./defaults.json?v=${ASSET_VERSION}`, { cache: "no-store" }).then(r => r.json());
   buildControls();
   $("#reset").addEventListener("click", () => { buildControls(); render(); });
   render();
