@@ -108,14 +108,40 @@ function renderPie(el, groups) {
   const entries = groups.flatMap(([, groupEntries]) => groupEntries);
   const total = entries.reduce((s, [, v]) => s + v, 0);
   let start = 0;
+  const slices = [];
   const colors = ["#2563eb", "#0f766e", "#9333ea", "#d97706", "#dc2626", "#0891b2", "#4f46e5", "#65a30d", "#7c3aed", "#be123c", "#475569", "#a16207"];
-  const stops = entries.map(([, v], i) => {
+  const stops = entries.map(([name, v], i) => {
     const end = start + v / total * 360;
     const s = `${colors[i % colors.length]} ${start}deg ${end}deg`;
+    slices.push({ name, value: v, start, end });
     start = end;
     return s;
   }).join(",");
-  el.querySelector(".pie").style.background = `conic-gradient(${stops})`;
+  const pie = el.querySelector(".pie");
+  pie.style.background = `conic-gradient(${stops})`;
+
+  let tooltip = pie.querySelector(".pie-tooltip");
+  if (!tooltip) {
+    tooltip = document.createElement("div");
+    tooltip.className = "pie-tooltip";
+    tooltip.innerHTML = "<span></span><strong></strong>";
+    pie.appendChild(tooltip);
+  }
+  pie.onmousemove = event => {
+    const bounds = pie.getBoundingClientRect();
+    const x = event.clientX - bounds.left;
+    const y = event.clientY - bounds.top;
+    const angle = (Math.atan2(x - bounds.width / 2, bounds.height / 2 - y) * 180 / Math.PI + 360) % 360;
+    const slice = slices.find(item => angle >= item.start && angle < item.end) || slices.at(-1);
+    if (!slice) return;
+    tooltip.querySelector("span").textContent = slice.name;
+    tooltip.querySelector("strong").textContent = money(slice.value);
+    tooltip.style.left = `${x}px`;
+    tooltip.style.top = `${y}px`;
+    tooltip.classList.add("visible");
+  };
+  pie.onmouseleave = () => tooltip.classList.remove("visible");
+
   let colorIndex = 0;
   el.querySelector(".legend").innerHTML = groups.map(([groupName, groupEntries]) => `
     <h4>${groupLabel(groupName, groupEntries)}</h4>

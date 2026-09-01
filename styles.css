@@ -27,7 +27,11 @@ button { border:1px solid var(--line); border-radius:9px; padding:10px 14px; bac
 .summary-grid strong { display:block; margin-top:3px; }
 .pies { display:grid; grid-template-columns:1fr; gap:16px; }
 .pie-wrap { display:grid; grid-template-columns:150px 1fr; gap:16px; align-items:center; }
-.pie { width:150px; height:150px; border-radius:50%; box-shadow:inset 0 0 0 1px rgba(0,0,0,.05); }
+.pie { position:relative; width:150px; height:150px; border-radius:50%; box-shadow:inset 0 0 0 1px rgba(0,0,0,.05); cursor:default; }
+.pie-tooltip { position:absolute; z-index:1; display:none; min-width:max-content; padding:7px 9px; border:1px solid var(--line); border-radius:7px; background:var(--card); box-shadow:0 4px 12px rgb(16 24 40 / 18%); pointer-events:none; transform:translate(10px,calc(-100% - 10px)); font-size:12px; }
+.pie-tooltip.visible { display:block; }
+.pie-tooltip span { display:block; color:var(--muted); }
+.pie-tooltip strong { display:block; margin-top:2px; }
 .legend { font-size:12px; }
 .legend h4 { margin:10px 0 6px; color:var(--muted); font-size:11px; letter-spacing:.05em; text-transform:uppercase; }
 .legend h4:first-child { margin-top:0; }
