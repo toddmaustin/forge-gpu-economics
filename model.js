@@ -11,6 +11,13 @@ export function grossDiesPerWafer(waferDiameterMm, dieAreaMm2) {
 
 export function normalizeInputs(raw) {
   const x = { ...raw };
+  for (const key of ["logic_yield", "package_yield"]) {
+    const percentage = Number(x[key]);
+    if (!(percentage > 0 && percentage <= 100)) {
+      throw new Error(`${key} must be a percentage greater than 0 and no more than 100.`);
+    }
+    x[key] = percentage / 100;
+  }
   const positive = [
     "fleet_year1", "horizon_years", "custom_performance_ratio", "wafer_diameter_mm",
     "die_area_mm2", "package_yield", "logic_yield", "pue"
@@ -18,7 +25,6 @@ export function normalizeInputs(raw) {
   for (const k of positive) {
     if (!(Number(x[k]) > 0)) throw new Error(`${k} must be positive.`);
   }
-  if (x.package_yield > 1 || x.logic_yield > 1) throw new Error("Yield values must be fractions between 0 and 1.");
   if (x.pue < 1) throw new Error("PUE must be at least 1.0.");
   return x;
 }
@@ -229,7 +235,7 @@ export function sensitivity(raw, fraction = 0.20) {
     // Yields are probabilities. A straight +20% perturbation can push a valid
     // input (such as the default 90% package yield) above 100%, causing the
     // whole sensitivity panel to fail validation instead of rendering.
-    const upperBound = key === "logic_yield" || key === "package_yield" ? 1 : Infinity;
+    const upperBound = key === "logic_yield" || key === "package_yield" ? 100 : Infinity;
     const perturbedValue = Math.min(raw[key] * (1 + fraction), upperBound);
     const perturbed = { ...raw, [key]: perturbedValue };
     const advantage = computeTCO(perturbed).buildAdvantage;

@@ -41,12 +41,12 @@ const groups = [
     ["wafer_price", "Wafer price", "currency", 500],
     ["wafer_price_growth", "Wafer price change / year", "percent", 1],
     ["die_area_mm2", "Compute die area (mm²)", "number", 5],
-    ["logic_yield", "Known-good logic yield", "percent", 1],
+    ["logic_yield", "Known-good logic yield", "percentage", 1],
     ["mask_process_nre", "Mask/process tooling NRE", "currency", 1000000]
   ]],
   ["Packaging & NRE", [
     ["package_interposer_cost", "Advanced package/interposer", "currency", 100],
-    ["package_yield", "Final package yield", "percent", 1],
+    ["package_yield", "Final package yield", "percentage", 1],
     ["board_vrm_test_cost", "Board, VRM & final test", "currency", 100],
     ["design_nre", "Architecture / RTL / verification / PD NRE", "currency", 25000000],
     ["initial_software_nre", "Compiler/software initial NRE", "currency", 5000000],
@@ -85,8 +85,9 @@ function buildControls() {
     for (const [key, label, kind, step] of fields) {
       const wrap = document.createElement("label");
       wrap.className = "control";
-      const suffix = kind === "percent" ? " (%)" : kind === "years" ? " (years)" : kind === "ratio" ? " (×)" : "";
-      wrap.innerHTML = `<span>${label}${suffix}</span><input data-key="${key}" data-kind="${kind}" type="number" step="${step}" value="${displayValue(defaults[key], kind)}">`;
+      const suffix = kind === "percent" || kind === "percentage" ? " (%)" : kind === "years" ? " (years)" : kind === "ratio" ? " (×)" : "";
+      const bounds = kind === "percentage" ? ' min="0" max="100"' : "";
+      wrap.innerHTML = `<span>${label}${suffix}</span><input data-key="${key}" data-kind="${kind}" type="number" step="${step}"${bounds} value="${displayValue(defaults[key], kind)}">`;
       grid.appendChild(wrap);
     }
     root.appendChild(section);

@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { computeTCO, grossDiesPerWafer, breakEvenFleet, sensitivity } from "../model.js";
+import { computeTCO, grossDiesPerWafer, breakEvenFleet, normalizeInputs, sensitivity } from "../model.js";
 
 const defaults = JSON.parse(fs.readFileSync(new URL("../defaults.json", import.meta.url), "utf8"));
 
@@ -42,4 +42,11 @@ test("sensitivity analysis renders valid finite perturbations", () => {
   assert.equal(results.length, 28);
   assert.ok(results.every(({ delta, advantage }) => Number.isFinite(delta) && Number.isFinite(advantage)));
   assert.ok(results.some(({ key }) => key === "package_yield"));
+});
+
+test("yields are accepted as percentages from 0 to 100", () => {
+  const normalized = normalizeInputs(defaults);
+  assert.equal(normalized.logic_yield, 0.55);
+  assert.equal(normalized.package_yield, 0.9);
+  assert.throws(() => normalizeInputs({ ...defaults, package_yield: 101 }), /no more than 100/);
 });
