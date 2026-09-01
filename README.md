@@ -22,7 +22,7 @@ It connects computer-architecture assumptions — useful performance, die size/y
 
 ## Access the model online
 
-[Access the model online](https://toddmaustin.github.io/forge-gpu-economics/)
+Access the model online: <https://github.com/toddmaustin/forge-gpu-economics>
 
 ## Repository structure
 
@@ -60,7 +60,7 @@ Issues and pull requests are welcome. For assumption changes, please include:
 
 To cite the use of this model (or a derivative), please use the following citation:
 
-Todd M. Austin, "FORGE: Fabricate OR buy GPU Economics", https://github.com/toddmaustin/forge-gpu-economics
+Todd M. Austin, (2026). *FORGE: Fabricate OR buy GPU Economics* [Computer software]. GitHub. https://github.com/toddmaustin/forge-gpu-economics
 
 ## License
 
