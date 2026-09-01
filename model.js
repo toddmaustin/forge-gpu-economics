@@ -1,4 +1,4 @@
-/* FORGE — Fabricate OR buy GPU Economics
+/* FORGE — Fabricate OR buy Gpu Economics
  * Pure model code. No DOM dependencies.
  */
 
