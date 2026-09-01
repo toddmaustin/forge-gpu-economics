@@ -22,7 +22,7 @@ It connects computer-architecture assumptions — useful performance, die size/y
 
 ## Access the model online
 
-[Access the model online](https://toddmaustin.github.io/forge-gpu-economics/)
+Access the model online: <https://toddmaustin.github.io/forge-gpu-economics/>
 
 ## Repository structure
 
@@ -34,8 +34,7 @@ forge-gpu-economics/
 ├── styles.css              Styling
 ├── defaults.json           Machine-readable assumptions
 ├── docs/
-│   ├── model.md            Full equations
-│   └── assumptions.md      Default rationale and limitations
+│   └── model.md            Parameters, assumptions, equations, and limitations
 ├── tests/
 │   └── model.test.js       Regression/unit tests
 ├── LICENSE
@@ -44,7 +43,7 @@ forge-gpu-economics/
 
 ## Methodology
 
-See [`docs/model.md`](docs/model.md) for equations and [`docs/assumptions.md`](docs/assumptions.md) for the parameter definitions, boundaries, and limitations.
+See [`docs/model.md`](docs/model.md) for the parameter definitions, assumptions, equations, boundaries, and limitations.
 
 ## Contributing
 
@@ -60,7 +59,7 @@ Issues and pull requests are welcome. For assumption changes, please include:
 
 To cite the use of this model (or a derivative), please use the following citation:
 
-Todd M. Austin, "FORGE: Fabricate OR buy GPU Economics", https://github.com/toddmaustin/forge-gpu-economics
+Todd M. Austin, (2026). *FORGE: Fabricate OR buy GPU Economics* [Computer software]. GitHub. https://github.com/toddmaustin/forge-gpu-economics
 
 ## License
 

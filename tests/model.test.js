@@ -71,3 +71,15 @@ test("browser entry points cache-bust the current assets", () => {
   assert.match(ui, /model\.js\?v=1\.1\.4/);
   assert.match(ui, /defaults\.json\?v=\$\{ASSET_VERSION\}/);
 });
+
+test("documentation uses the combined Markdown model", () => {
+  const index = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const model = fs.readFileSync(new URL("../docs/model.md", import.meta.url), "utf8");
+
+  assert.match(index, /github\.com\/toddmaustin\/forge-gpu-economics\/blob\/main\/docs\/model\.md/);
+  assert.match(model, /## Assumptions, boundaries, and limitations/);
+  assert.match(model, /\$\$\nA = TCO_\{BUY\} - TCO_\{BUILD\}\n\$\$/);
+  assert.equal(fs.existsSync(new URL("../docs/model.html", import.meta.url)), false);
+  assert.equal(fs.existsSync(new URL("../docs/assumptions.html", import.meta.url)), false);
+  assert.equal(fs.existsSync(new URL("../docs/assumptions.md", import.meta.url)), false);
+});
