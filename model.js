@@ -161,6 +161,16 @@ export function computeTCO(raw, fleetOverride = null) {
   const sum = obj => Object.values(obj).reduce((a, b) => a + b, 0);
   const buyTCO = sum(buy);
   const buildTCO = sum(build);
+  const buyCostTypes = {
+    capex: buy.vendorGPUsInclHBM + buy.platformCapex + buy.facilityCost,
+    opex: buy.electricity + buy.powerCoolingInfrastructure + buy.softwareSupport
+  };
+  const buildCostTypes = {
+    capex: build.designNRE + build.initialSoftwareNRE + build.maskProcessNRE +
+      build.logicSilicon + build.hbm + build.packageInterposer + build.boardVrmTest +
+      build.platformCapex + build.facilityCost,
+    opex: build.electricity + build.powerCoolingInfrastructure + build.ongoingSoftware
+  };
 
   return {
     inputs: x,
@@ -169,6 +179,8 @@ export function computeTCO(raw, fleetOverride = null) {
     build,
     buyTCO,
     buildTCO,
+    buyCostTypes,
+    buildCostTypes,
     buildAdvantage: buyTCO - buildTCO,
     decision: buyTCO >= buildTCO ? "BUILD" : "BUY",
     year1: {
