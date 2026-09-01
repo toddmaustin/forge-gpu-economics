@@ -226,7 +226,12 @@ export const SENSITIVITY_FIELDS = [
 export function sensitivity(raw, fraction = 0.20) {
   const base = computeTCO(raw).buildAdvantage;
   return SENSITIVITY_FIELDS.map(([key, label]) => {
-    const perturbed = { ...raw, [key]: raw[key] * (1 + fraction) };
+    // Yields are probabilities. A straight +20% perturbation can push a valid
+    // input (such as the default 90% package yield) above 100%, causing the
+    // whole sensitivity panel to fail validation instead of rendering.
+    const upperBound = key === "logic_yield" || key === "package_yield" ? 1 : Infinity;
+    const perturbedValue = Math.min(raw[key] * (1 + fraction), upperBound);
+    const perturbed = { ...raw, [key]: perturbedValue };
     const advantage = computeTCO(perturbed).buildAdvantage;
     return { key, label, delta: advantage - base, advantage };
   }).sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
