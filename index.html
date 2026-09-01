@@ -24,7 +24,7 @@
     <main id="controls"></main>
     <aside>
       <section class="panel"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><h2>Fleet & hardware summary</h2><button id="reset">Reset defaults</button></div><div id="fleet-summary" class="summary-grid"></div></section>
-      <section class="panel"><h2>Cost composition</h2><div class="pies"><div><h3>BUILD</h3><div id="build-pie" class="pie-wrap"><div class="pie"></div><div class="legend"></div></div></div><div><h3>BUY</h3><div id="buy-pie" class="pie-wrap"><div class="pie"></div><div class="legend"></div></div></div></div></section>
+      <section class="panel"><h2>Cost composition</h2><div class="pies"><div><h3 id="build-composition-label">BUILD</h3><div id="build-pie" class="pie-wrap"><div class="pie"></div><div class="legend"></div></div></div><div><h3 id="buy-composition-label">BUY</h3><div id="buy-pie" class="pie-wrap"><div class="pie"></div><div class="legend"></div></div></div></div></section>
       <section class="panel"><h2>BUILD cost ledger</h2><table><thead><tr><th>Cost</th><th>Total</th><th>Share</th></tr></thead><tbody id="build-costs"></tbody></table></section>
       <section class="panel"><h2>BUY cost ledger</h2><table><thead><tr><th>Cost</th><th>Total</th><th>Share</th></tr></thead><tbody id="buy-costs"></tbody></table></section>
       <section class="panel callout"><h2>Sensitivity</h2><p style="color:var(--muted);font-size:13px">+20% one-at-a-time perturbation. Positive change favors BUILD; negative favors BUY.</p><div id="sensitivity"></div></section>

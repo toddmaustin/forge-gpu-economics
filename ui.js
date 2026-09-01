@@ -134,6 +134,8 @@ function render() {
     $("#advantage").textContent = `${z.buildAdvantage >= 0 ? "BUILD" : "BUY"} advantage ${money(Math.abs(z.buildAdvantage))}`;
     $("#build-tco").textContent = money(z.buildTCO);
     $("#buy-tco").textContent = money(z.buyTCO);
+    $("#build-composition-label").textContent = `BUILD (${money(z.buildTCO)})`;
+    $("#buy-composition-label").textContent = `BUY (${money(z.buyTCO)})`;
     const be = breakEvenFleet(x);
     $("#break-even").textContent = be.type === "value" ? num(be.fleet) : be.type === "below" ? "< 1" : `> ${num(be.fleet)}`;
 
