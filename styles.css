@@ -29,11 +29,14 @@ button { border:1px solid var(--line); border-radius:9px; padding:10px 14px; bac
 .pie-wrap { display:grid; grid-template-columns:150px 1fr; gap:16px; align-items:center; }
 .pie { width:150px; height:150px; border-radius:50%; box-shadow:inset 0 0 0 1px rgba(0,0,0,.05); }
 .legend { font-size:12px; }
+.legend h4 { margin:10px 0 6px; color:var(--muted); font-size:11px; letter-spacing:.05em; text-transform:uppercase; }
+.legend h4:first-child { margin-top:0; }
 .legend div { display:grid; grid-template-columns:10px 1fr auto; gap:7px; align-items:center; margin:5px 0; }
 .legend i { width:9px; height:9px; border-radius:2px; }
 table { width:100%; border-collapse:collapse; font-size:13px; }
 th,td { text-align:left; padding:8px 7px; border-top:1px solid var(--line); }
 th:nth-child(n+2),td:nth-child(n+2) { text-align:right; }
+.cost-group th { padding-top:14px; color:var(--muted); font-size:11px; letter-spacing:.05em; text-align:left; text-transform:uppercase; }
 .total { font-weight:800; }
 .sens-row { margin:10px 0; }
 .sens-error { color:#b42318; font-size:13px; }
