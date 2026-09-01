@@ -36,6 +36,7 @@ th,td { text-align:left; padding:8px 7px; border-top:1px solid var(--line); }
 th:nth-child(n+2),td:nth-child(n+2) { text-align:right; }
 .total { font-weight:800; }
 .sens-row { margin:10px 0; }
+.sens-error { color:#b42318; font-size:13px; }
 .sens-row>div:first-child { display:flex; justify-content:space-between; gap:12px; font-size:12px; }
 .bar { height:7px; background:#edf0f5; border-radius:999px; overflow:hidden; margin-top:4px; }
 .bar b { display:block; height:100%; background:var(--accent); border-radius:999px; }

@@ -1,5 +1,5 @@
 {
-  "model_version": "1.0.0",
+  "model_version": "1.1.0",
   "baseline_label": "2026 illustrative baseline",
   "foundry": "TSMC",
   "process_node": "N3 / N3E (3 nm class)",

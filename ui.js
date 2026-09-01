@@ -1,4 +1,6 @@
-import { computeTCO, breakEvenFleet, sensitivity } from "./model.js";
+import { computeTCO, breakEvenFleet, sensitivity } from "./model.js?v=1.1.0";
+
+const ASSET_VERSION = "1.1.0";
 
 const $ = s => document.querySelector(s);
 const money = x => {
@@ -167,16 +169,22 @@ function render() {
     $("#buy-costs").innerHTML = rows(buyEntries, z.buyTCO) + `<tr class="total"><td>Total BUY TCO</td><td>${money(z.buyTCO)}</td><td>100%</td></tr>`;
     $("#build-costs").innerHTML = rows(buildEntries, z.buildTCO) + `<tr class="total"><td>Total BUILD TCO</td><td>${money(z.buildTCO)}</td><td>100%</td></tr>`;
 
-    const s = sensitivity(x);
-    const max = Math.max(...s.map(v => Math.abs(v.delta)), 1);
-    $("#sensitivity").innerHTML = s.map((v, i) => `<div class="sens-row"><div><span>${i + 1}. ${v.label}</span><strong>${v.delta >= 0 ? "+" : ""}${money(v.delta)}</strong></div><div class="bar"><b style="width:${Math.max(1, 100 * Math.abs(v.delta) / max)}%"></b></div></div>`).join("");
+    try {
+      const s = sensitivity(x);
+      const max = Math.max(...s.map(v => Math.abs(v.delta)), 1);
+      $("#sensitivity").classList.remove("sens-error");
+      $("#sensitivity").innerHTML = s.map((v, i) => `<div class="sens-row"><div><span>${i + 1}. ${v.label}</span><strong>${v.delta >= 0 ? "+" : ""}${money(v.delta)}</strong></div><div class="bar"><b style="width:${Math.max(1, 100 * Math.abs(v.delta) / max)}%"></b></div></div>`).join("");
+    } catch (e) {
+      $("#sensitivity").classList.add("sens-error");
+      $("#sensitivity").textContent = `Sensitivity unavailable: ${e.message}`;
+    }
   } catch (e) {
     $("#error").textContent = e.message;
   }
 }
 
 async function init() {
-  defaults = await fetch("./defaults.json").then(r => r.json());
+  defaults = await fetch(`./defaults.json?v=${ASSET_VERSION}`, { cache: "no-store" }).then(r => r.json());
   buildControls();
   $("#reset").addEventListener("click", () => { buildControls(); render(); });
   render();
