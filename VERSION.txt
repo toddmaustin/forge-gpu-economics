@@ -1,0 +1,4 @@
+**Fabricate OR buy Gpu Economics** — an open, auditable BUILD-vs-BUY TCO model for AI infrastructure
+
+Version 1.0
+- First release.
