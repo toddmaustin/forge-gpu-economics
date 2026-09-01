@@ -3,6 +3,7 @@
 FORGE ships with an **illustrative 2026 baseline**, not a price quote. Users should replace defaults with project-specific values.
 
 The machine-readable source of truth is [`defaults.json`](../defaults.json).
+Yield inputs in that file and in the calculator are numeric percentages from greater than 0 through 100.
 
 ## Current baseline
 
