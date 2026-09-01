@@ -1,6 +1,6 @@
-import { computeTCO, breakEvenFleet, sensitivity } from "./model.js?v=1.1.3";
+import { computeTCO, breakEvenFleet, sensitivity } from "./model.js?v=1.1.4";
 
-const ASSET_VERSION = "1.1.3";
+const ASSET_VERSION = "1.1.4";
 
 const $ = s => document.querySelector(s);
 const money = x => {
@@ -11,6 +11,12 @@ const money = x => {
   return `$${x.toFixed(0)}`;
 };
 const num = x => Math.round(x).toLocaleString();
+const power = watts => {
+  if (Math.abs(watts) >= 1e9) return `${(watts / 1e9).toFixed(2)} GW`;
+  if (Math.abs(watts) >= 1e6) return `${(watts / 1e6).toFixed(1)} MW`;
+  if (Math.abs(watts) >= 1e3) return `${(watts / 1e3).toFixed(1)} kW`;
+  return `${num(watts)} W`;
+};
 const groupLabel = (name, entries) => `${name} (${money(entries.reduce((sum, [, value]) => sum + value, 0))})`;
 
 const groups = [
@@ -170,9 +176,11 @@ function render() {
       <div><span>Year-1 vendor GPUs</span><strong>${num(z.yearly[0].vendorCount)}</strong></div>
       <div><span>Year-1 custom devices</span><strong>${num(z.yearly[0].customCount)}</strong></div>
       <div><span>Custom / 100 vendor GPUs</span><strong>${(100 / x.custom_performance_ratio).toFixed(1)}</strong></div>
+      <div><span>Custom module cost</span><strong>${money(y1.customModule.finishedModuleCost)}</strong></div>
       <div><span>Vendor IT power/device</span><strong>${num(y1.vendorPowerW)} W</strong></div>
       <div><span>Custom IT power/device</span><strong>${num(y1.customPowerW)} W</strong></div>
-      <div><span>Custom module cost</span><strong>${money(y1.customModule.finishedModuleCost)}</strong></div>
+      <div><span>Total Vendor IT power</span><strong>${power(z.yearly[0].vendorCount * y1.vendorPowerW)}</strong></div>
+      <div><span>Total Custom IT power</span><strong>${power(z.yearly[0].customCount * y1.customPowerW)}</strong></div>
       <div><span>Gross dies/wafer</span><strong>${y1.silicon.grossDiesPerWafer.toFixed(1)}</strong></div>
       <div><span>Good dies/wafer</span><strong>${y1.silicon.goodDiesPerWafer.toFixed(1)}</strong></div>`;
 
