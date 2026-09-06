@@ -1,7 +1,8 @@
-import { computeTCO, breakEvenFleet, sensitivity } from "./model.js?v=1.2.0";
-import { DEFAULT_MODEL_ID, FORGE_MODELS, getForgeModel } from "./forge-models.js?v=1.2.0";
+import { computeTCO, breakEvenFleet, sensitivity } from "./model.js?v=1.3.0";
+import { DEFAULT_MODEL_ID, FORGE_MODELS, getForgeModel } from "./forge-models.js?v=1.3.0";
+import { computeSpaceTCO, spaceSensitivity } from "./space-model.js?v=1.3.0";
 
-const ASSET_VERSION = "1.2.0";
+const ASSET_VERSION = "1.3.0";
 
 const $ = s => document.querySelector(s);
 const money = x => {
@@ -20,7 +21,7 @@ const power = watts => {
 };
 const groupLabel = (name, entries) => `${name} (${money(entries.reduce((sum, [, value]) => sum + value, 0))})`;
 
-const groups = [
+const buyBuildGroups = [
   ["Fleet & performance", [
     ["fleet_year1", "Year-1 vendor GPU fleet", "number", 1],
     ["demand_growth", "Demand growth / year", "percent", 1],
@@ -72,6 +73,38 @@ const groups = [
   ]]
 ];
 
+const spaceGroups = [
+  ["Workload & Vendor IT baseline", [
+    ["fleet_year1", "Year-1 workload (vendor-GPU equivalents)", "number", 1000], ["demand_growth", "Demand growth / year", "percent", 1], ["horizon_years", "TCO horizon", "years", 1],
+    ["vendor_gpu_price", "Vendor GPU price incl. HBM", "currency", 1000], ["vendor_logic_power_w", "Vendor GPU power excl. HBM (W)", "number", 10],
+    ["vendor_hbm_stacks", "HBM stacks / GPU", "number", 1], ["hbm_power_w_per_stack", "HBM power / stack (W)", "number", 5], ["host_network_power_w_per_device", "Host/network power / GPU (W)", "number", 10]
+  ]],
+  ["Launch & orbital architecture", [
+    ["launch_cost_per_kg", "All-in launch cost / kg", "currency", 100], ["payload_mass_kg_per_gpu", "Compute payload mass / GPU (kg)", "number", 1], ["bus_structure_mass_kg_per_gpu", "Bus/structure mass / GPU (kg)", "number", 1],
+    ["shielding_mass_kg_per_gpu", "Radiation shielding / GPU (kg)", "number", 1], ["propulsion_mass_kg_per_gpu", "Station-keeping/collision avoidance / GPU (kg)", "number", 1], ["end_of_life_cost_per_kg", "End-of-life disposal / kg", "currency", 10]
+  ]],
+  ["Compute hardware & resilience", [
+    ["space_useful_performance_ratio", "Useful performance vs terrestrial GPU", "ratio", 0.05], ["radiation_redundancy_factor", "Radiation/fault redundancy factor", "ratio", 0.05], ["space_hardware_lifetime_years", "Replacement lifetime", "years", 0.5],
+    ["qualification_nre", "Space qualification NRE", "currency", 10000000], ["space_platform_cost_per_gpu", "Space platform electronics / GPU", "currency", 1000], ["spares_servicing_percent", "Spares & servicing / new hardware", "percentage", 1]
+  ]],
+  ["Solar power & batteries", [
+    ["solar_specific_power_w_per_kg", "Solar specific power (W/kg)", "number", 10], ["solar_array_cost_per_w", "Solar array cost / W", "currency", 1], ["solar_annual_degradation", "Solar degradation / year", "percent", 0.5],
+    ["solar_pointing_efficiency", "Solar pointing efficiency", "percent", 1], ["compute_duty_cycle", "Peak-vs-average compute duty cycle", "percent", 1], ["spacecraft_bus_power_w_per_gpu", "Spacecraft bus power / GPU (W)", "number", 10],
+    ["eclipse_hours_per_day", "Eclipse hours / day (sun-sync default: 0)", "number", 0.1], ["battery_specific_energy_wh_per_kg", "Battery specific energy (Wh/kg)", "number", 10], ["battery_cost_per_kwh", "Battery cost / kWh", "currency", 100]
+  ]],
+  ["Radiative thermal system", [
+    ["thermal_rejection_w_per_m2", "Radiator rejection (W/m²)", "number", 10], ["radiator_view_factor", "Radiator view factor", "percent", 1], ["radiator_mass_kg_per_m2", "Deployable radiator mass (kg/m²)", "number", 0.5], ["radiator_cost_per_m2", "Radiator cost / m²", "currency", 500]
+  ]],
+  ["Communications", [
+    ["data_tb_per_gpu_day", "Data transferred / GPU-day (TB)", "number", 0.01], ["data_transfer_kwh_per_tb", "Transfer energy (kWh/TB)", "number", 0.1], ["weather_availability", "Ground-link weather availability", "percent", 1],
+    ["ground_station_capex", "Ground-station CapEx", "currency", 10000000], ["inter_node_link_cost_per_gpu", "Inter-node link CapEx / GPU", "currency", 100], ["spectrum_licensing_per_year", "Spectrum/licensing / year", "currency", 1000000], ["ground_network_ops_per_year", "Ground network operations / year", "currency", 1000000]
+  ]],
+  ["Mission operations", [
+    ["mission_control_per_year", "Mission control & staffing / year", "currency", 1000000], ["cybersecurity_per_year", "Cybersecurity / year", "currency", 1000000], ["telemetry_software_per_year", "Autonomy/telemetry software / year", "currency", 1000000], ["operations_per_spacecraft_year", "Operations / deployed GPU-year", "currency", 50]
+  ]]
+];
+const groupsForModel = () => activeModel.id === "terrestrial-space" ? spaceGroups : buyBuildGroups;
+
 let defaults;
 let activeModel = getForgeModel(new URLSearchParams(window.location.search).get("model"));
 
@@ -97,7 +130,7 @@ function selectModel(id) {
   $("#model-title").textContent = activeModel.title;
   $("#model-description").textContent = activeModel.description;
   $("#model-note").textContent = activeModel.considerations
-    ? "The current calculator is a shared-model starting point; space-specific costs are not yet included. See the browser console for the modeling checklist."
+    ? "First-draft orbital architecture with mass, power, thermal, resilience, communications, operations, and disposal; terrestrial costs use Vendor IT."
     : "Adjust the shared hardware, fleet, and data-center assumptions below.";
 
   if (activeModel.considerations) {
@@ -105,7 +138,7 @@ function selectModel(id) {
     activeModel.considerations.forEach((consideration, index) => console.info(`${index + 1}. ${consideration}`));
     console.groupEnd();
   }
-  render();
+  loadModelDefaults().catch(showError);
 }
 
 function displayValue(v, kind) {
@@ -121,7 +154,7 @@ function readValue(input) {
 function buildControls() {
   const root = $("#controls");
   root.innerHTML = "";
-  for (const [title, fields] of groups) {
+  for (const [title, fields] of groupsForModel()) {
     const section = document.createElement("section");
     section.className = "panel";
     section.innerHTML = `<h2>${title}</h2><div class="control-grid"></div>`;
@@ -197,6 +230,8 @@ function renderPie(el, groups, costTypes) {
 }
 
 function render() {
+  if (!defaults) return;
+  if (activeModel.id === "terrestrial-space") return renderSpace();
   const x = currentInputs();
   try {
     const z = computeTCO(x);
@@ -281,11 +316,63 @@ function render() {
   }
 }
 
-async function init() {
-  defaults = await fetch(`./defaults.json?v=${ASSET_VERSION}`, { cache: "no-store" }).then(r => r.json());
-  buildModelSelector();
+function showError(error) { $("#error").textContent = error.message; }
+
+function renderSpace() {
+  const x = currentInputs();
+  try {
+    const z = computeSpaceTCO(x);
+    $("#error").textContent = "";
+    const winner = z.decision;
+    $("#decision").textContent = winner;
+    $("#advantage").textContent = `${winner} advantage ${money(Math.abs(z.spaceAdvantage))}`;
+    $("#build-tco-label").textContent = "SPACE-BASED TCO";
+    $("#buy-tco-label").textContent = "TERRESTRIAL TCO";
+    $("#build-tco").textContent = money(z.spaceTCO);
+    $("#buy-tco").textContent = money(z.terrestrialTCO);
+    $("#build-composition-label").textContent = `SPACE-BASED (${money(z.spaceTCO)})`;
+    $("#buy-composition-label").textContent = `TERRESTRIAL (${money(z.terrestrialTCO)})`;
+    $("#build-ledger-label").textContent = "SPACE-BASED cost ledger";
+    $("#buy-ledger-label").textContent = "TERRESTRIAL Vendor IT cost ledger";
+    $("#break-even").textContent = "—";
+    $("#break-even-detail").textContent = "not calculated in first draft";
+    const y = z.yearly[0];
+    $("#fleet-summary").innerHTML = `<div><span>Year-1 workload</span><strong>${num(y.workloadGPUs)} GPU-eq.</strong></div><div><span>Required orbital GPUs</span><strong>${num(y.requiredGPUs)}</strong></div>
+      <div><span>Useful service availability</span><strong>${(100*x.space_useful_performance_ratio*x.compute_duty_cycle*x.weather_availability).toFixed(1)}%</strong></div><div><span>IT power / GPU</span><strong>${power(y.itPowerW)}</strong></div>
+      <div><span>Average orbital power / GPU</span><strong>${power(y.averagePowerW)}</strong></div><div><span>Launch mass / GPU</span><strong>${y.dryMassKg.toFixed(1)} kg</strong></div>
+      <div><span>Solar mass / GPU</span><strong>${y.solarMassKg.toFixed(1)} kg</strong></div><div><span>Battery mass / GPU</span><strong>${y.batteryMassKg.toFixed(1)} kg</strong></div>
+      <div><span>Radiator area / GPU</span><strong>${y.radiatorAreaM2.toFixed(1)} m²</strong></div><div><span>Radiator mass / GPU</span><strong>${y.radiatorMassKg.toFixed(1)} kg</strong></div>`;
+    const spaceGroups = [["Orbital hardware", [["Vendor compute hardware", z.space.computeHardware], ["Space platform", z.space.spacePlatform], ["Qualification NRE", z.space.qualification]]],
+      ["Launch & spacecraft systems", [["All-in launch", z.space.launch], ["Solar arrays", z.space.solarArrays], ["Batteries", z.space.batteries], ["Radiators", z.space.thermal]]],
+      ["Communications & operations", [["Ground/inter-node communications", z.space.communications], ["Mission operations", z.space.missionOperations], ["Spares & servicing", z.space.sparesServicing], ["End-of-life disposal", z.space.endOfLife]]]];
+    const terrestrialGroups = [["Vendor IT hardware", [["Vendor GPUs incl. HBM", z.terrestrial.vendorGPUsInclHBM], ["Platform CAPEX", z.terrestrial.platformCapex], ["Facility cost", z.terrestrial.facilityCost]]],
+      ["Terrestrial operations", [["Electricity", z.terrestrial.electricity], ["Power & cooling capacity", z.terrestrial.powerCoolingInfrastructure], ["Software/support", z.terrestrial.softwareSupport]]]];
+    renderPie($("#build-pie"), spaceGroups, z.spaceCostTypes);
+    renderPie($("#buy-pie"), terrestrialGroups, z.terrestrialCostTypes);
+    const rows = (groups, total) => groups.map(([name, entries]) => `<tr class="cost-group"><th colspan="3">${groupLabel(name, entries)}</th></tr>${entries.map(([label,value]) => `<tr><td>${label}</td><td>${money(value)}</td><td>${(100*value/total).toFixed(1)}%</td></tr>`).join("")}`).join("");
+    $("#build-costs").innerHTML = rows(spaceGroups,z.spaceTCO)+`<tr class="total"><td>Total SPACE-BASED TCO</td><td>${money(z.spaceTCO)}</td><td>100%</td></tr>`;
+    $("#buy-costs").innerHTML = rows(terrestrialGroups,z.terrestrialTCO)+`<tr class="total"><td>Total TERRESTRIAL TCO</td><td>${money(z.terrestrialTCO)}</td><td>100%</td></tr>`;
+    const sensitivities = spaceSensitivity(x);
+    const max = Math.max(...sensitivities.map(value => Math.abs(value.delta)), 1);
+    $("#sensitivity-description").textContent = "+20% one-at-a-time perturbation. Positive favors SPACE-BASED; negative favors TERRESTRIAL.";
+    $("#sensitivity").innerHTML = sensitivities.map((value,index) => `<div class="sens-row"><div><span>${index+1}. ${value.label}</span><strong>${value.delta>=0?"+":""}${money(value.delta)}</strong></div><div class="bar"><b style="width:${Math.max(1,100*Math.abs(value.delta)/max)}%"></b></div></div>`).join("");
+  } catch (error) { showError(error); }
+}
+
+async function loadModelDefaults() {
+  const file = activeModel.defaultsFile || "defaults.json";
+  defaults = await fetch(`./${file}?v=${ASSET_VERSION}`, { cache: "no-store" }).then(response => {
+    if (!response.ok) throw new Error(`Unable to load ${file}.`);
+    return response.json();
+  });
   buildControls();
-  $("#reset").addEventListener("click", () => { buildControls(); render(); });
+  $(".parameter-glossary").hidden = activeModel.id === "terrestrial-space";
+  render();
+}
+
+async function init() {
+  buildModelSelector();
+  $("#reset").addEventListener("click", () => loadModelDefaults().catch(showError));
   selectModel(activeModel.id);
 }
 

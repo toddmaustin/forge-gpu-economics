@@ -30,10 +30,11 @@ export const FORGE_MODELS = Object.freeze({
     id: "terrestrial-space",
     shortName: "Terrestrial vs. space-based",
     title: "Terrestrial vs. space-based data centers",
-    description: "Explore the comparison using the shared FORGE IT model while space-specific CapEx and OpEx assumptions are defined.",
+    description: "Compare the Vendor IT terrestrial baseline with a first-order orbital TCO architecture.",
     left: "SPACE-BASED",
     right: "TERRESTRIAL",
-    considerations: SPACE_MODEL_CONSIDERATIONS
+    considerations: SPACE_MODEL_CONSIDERATIONS,
+    defaultsFile: "space-defaults.json"
   })
 });
 
