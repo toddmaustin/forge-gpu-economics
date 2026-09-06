@@ -3,8 +3,10 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import { computeTCO, grossDiesPerWafer, breakEvenFleet, normalizeInputs, sensitivity } from "../model.js";
 import { FORGE_MODELS, SPACE_MODEL_CONSIDERATIONS, getForgeModel } from "../forge-models.js";
+import { computeSpaceTCO, normalizeSpaceInputs, spaceSensitivity } from "../space-model.js";
 
 const defaults = JSON.parse(fs.readFileSync(new URL("../defaults.json", import.meta.url), "utf8"));
+const spaceDefaults = JSON.parse(fs.readFileSync(new URL("../space-defaults.json", import.meta.url), "utf8"));
 
 test("gross dies per wafer matches FORGE baseline", () => {
   const n = grossDiesPerWafer(300, 775);
@@ -67,11 +69,11 @@ test("browser entry points cache-bust the current assets", () => {
   const index = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
   const ui = fs.readFileSync(new URL("../ui.js", import.meta.url), "utf8");
 
-  assert.match(index, /styles\.css\?v=1\.2\.0/);
-  assert.match(index, /ui\.js\?v=1\.2\.0/);
-  assert.match(ui, /model\.js\?v=1\.2\.0/);
-  assert.match(ui, /forge-models\.js\?v=1\.2\.0/);
-  assert.match(ui, /defaults\.json\?v=\$\{ASSET_VERSION\}/);
+  assert.match(index, /styles\.css\?v=1\.3\.0/);
+  assert.match(index, /ui\.js\?v=1\.3\.0/);
+  assert.match(ui, /model\.js\?v=1\.3\.0/);
+  assert.match(ui, /forge-models\.js\?v=1\.3\.0/);
+  assert.match(ui, /\$\{file\}\?v=\$\{ASSET_VERSION\}/);
 });
 
 test("model catalog exposes both comparisons and a useful space checklist", () => {
@@ -80,4 +82,31 @@ test("model catalog exposes both comparisons and a useful space checklist", () =
   assert.ok(SPACE_MODEL_CONSIDERATIONS.length >= 8);
   assert.ok(SPACE_MODEL_CONSIDERATIONS.some(item => /launch/i.test(item)));
   assert.ok(SPACE_MODEL_CONSIDERATIONS.some(item => /thermal/i.test(item)));
+});
+
+
+test("space model produces balanced, finite ledgers against Vendor IT", () => {
+  const z = computeSpaceTCO(spaceDefaults);
+  assert.ok(Number.isFinite(z.spaceTCO) && z.spaceTCO > 0);
+  assert.ok(Number.isFinite(z.terrestrialTCO) && z.terrestrialTCO > 0);
+  assert.ok(Math.abs(Object.values(z.space).reduce((a, b) => a + b, 0) - z.spaceTCO) < 1e-6);
+  assert.ok(Math.abs(z.spaceCostTypes.capex + z.spaceCostTypes.opex - z.spaceTCO) < 1e-3);
+  assert.equal(z.terrestrialTCO, computeTCO(spaceDefaults).buyTCO);
+});
+
+test("space mass, availability, batteries, and launch costs respond to parameters", () => {
+  const base = computeSpaceTCO(spaceDefaults);
+  const eclipse = computeSpaceTCO({ ...spaceDefaults, eclipse_hours_per_day: 1 });
+  assert.equal(base.yearly[0].batteryMassKg, 0);
+  assert.ok(eclipse.yearly[0].batteryMassKg > 0);
+  assert.ok(eclipse.space.batteries > 0);
+  assert.ok(eclipse.space.launch > base.space.launch);
+  assert.ok(base.yearly[0].requiredGPUs > base.yearly[0].workloadGPUs);
+});
+
+test("space input validation and sensitivity are usable", () => {
+  assert.throws(() => normalizeSpaceInputs({ ...spaceDefaults, weather_availability: 1.1 }), /no more than 100%/);
+  const results = spaceSensitivity(spaceDefaults);
+  assert.equal(results.length, 13);
+  assert.ok(results.every(result => Number.isFinite(result.delta)));
 });

@@ -2,7 +2,7 @@
 
 **FORGE** is an open, browser-based economic model with selectable comparisons for **building custom accelerators vs. buying vendor GPUs** and **terrestrial vs. space-based data centers**.
 
-The terrestrial/space view currently reuses the existing calculator as a transparent starting point. It intentionally does not yet claim to model space-specific costs; selecting it prints a CapEx/OpEx design checklist in the browser console. Both comparisons use the same calculator components so shared vendor IT assumptions cannot drift between models.
+The terrestrial/space view provides a first-draft, parameterized orbital architecture covering launch mass, resilience, solar and battery power, radiative thermal systems, communications, operations, replacement, and disposal. Its terrestrial baseline directly uses the existing Vendor IT calculation, and each comparison has a one-click reset to illustrative defaults.
 
 It connects computer-architecture assumptions — useful performance, die size/yield, HBM, packaging, power — to datacenter total cost of ownership.
 
@@ -31,10 +31,12 @@ Access the model online: <https://toddmaustin.github.io/forge-gpu-economics/>
 ```text
 forge-gpu-economics/
 ├── index.html              Interactive calculator
-├── model.js                Pure economic model
+├── model.js                Buy-vs-build economic model
+├── space-model.js          Terrestrial-vs-space economic model
 ├── ui.js                   Browser UI, pies, sensitivity
 ├── styles.css              Styling
-├── defaults.json           Machine-readable assumptions
+├── defaults.json           Buy-vs-build assumptions
+├── space-defaults.json     Terrestrial-vs-space assumptions
 ├── docs/
 │   └── model.md            Equations, assumptions, and limitations
 ├── tests/

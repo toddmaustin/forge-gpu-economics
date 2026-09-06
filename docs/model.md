@@ -329,3 +329,17 @@ For construction-cost context, see:
 - No independent land-cost parameter.
 - Yield is an input rather than a defect-density model.
 - Dies per wafer is an approximation without explicit die aspect ratio, scribe lanes, or wafer-edge exclusion.
+
+## Space-based data-center first draft
+
+The **Terrestrial vs. space-based** view is a separate, parameterized scenario model. Its terrestrial side is the existing **Vendor IT (BUY)** calculation above, which keeps GPU, platform, facility, electricity, cooling-capacity, and vendor-support accounting consistent. Its illustrative inputs are stored in [`space-defaults.json`](../space-defaults.json) and the Reset button reloads that file.
+
+The space side converts terrestrial GPU-equivalent demand into an orbital fleet using useful-performance, compute-duty-cycle, ground-link weather availability, and radiation/fault redundancy assumptions:
+
+$$N_S(t)=\frac{N_V(t)R_{rad}}{R_{perf}D_{compute}A_{weather}}$$
+
+New launches cover demand growth plus a first-order annual replacement allowance, $N_S(t-1)/L$. Per-GPU launch mass includes compute payload, bus/structure, shielding, station-keeping/collision-avoidance propellant, solar array, battery, and radiator mass. The all-in launch-rate input is intended to include vehicle, integration, schedule/risk, insurance, and replenishment economics rather than only the advertised vehicle price.
+
+Average orbital electrical load includes duty-cycled IT power, continuous spacecraft-bus power, and data-transfer energy. Solar mass accounts for specific power, pointing efficiency, and annual degradation. Battery mass depends on user-supplied eclipse hours; the sun-synchronous illustrative default assumes continuous sunlight and therefore zero battery energy. Thermal area is computed without convection as duty-cycled IT heat divided by radiator heat rejection and view factor.
+
+The space ledger also includes GPU and platform acquisition, space-qualification NRE, solar arrays, batteries, deployable radiators, ground stations, inter-node links, spectrum/licensing, network operations, mission control and staffing, cybersecurity, autonomy/telemetry software, per-node operations, spares/on-orbit servicing, and end-of-life disposal. These simplified relationships omit launch batching, detailed orbital mechanics, financing/discounting, revenue, latency valuation, spectrum throughput constraints, and correlated failures. They are suitable for first-pass scenario exploration, not mission design or a quote.
