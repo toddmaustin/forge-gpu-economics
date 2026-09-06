@@ -1,6 +1,8 @@
 # FORGE — Fabricate OR buy Gpu Economics
 
-**FORGE** is an open, browser-based economic model for deciding whether to **BUILD a custom AI accelerator** or **BUY vendor GPUs** for large AI datacenter deployments.
+**FORGE** is an open, browser-based economic model with selectable comparisons for **building custom accelerators vs. buying vendor GPUs** and **terrestrial vs. space-based data centers**.
+
+The terrestrial/space view currently reuses the existing calculator as a transparent starting point. It intentionally does not yet claim to model space-specific costs; selecting it prints a CapEx/OpEx design checklist in the browser console. Both comparisons use the same calculator components so shared vendor IT assumptions cannot drift between models.
 
 It connects computer-architecture assumptions — useful performance, die size/yield, HBM, packaging, power — to datacenter total cost of ownership.
 

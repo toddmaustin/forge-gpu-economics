@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { computeTCO, grossDiesPerWafer, breakEvenFleet, normalizeInputs, sensitivity } from "../model.js";
+import { FORGE_MODELS, SPACE_MODEL_CONSIDERATIONS, getForgeModel } from "../forge-models.js";
 
 const defaults = JSON.parse(fs.readFileSync(new URL("../defaults.json", import.meta.url), "utf8"));
 
@@ -66,8 +67,17 @@ test("browser entry points cache-bust the current assets", () => {
   const index = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
   const ui = fs.readFileSync(new URL("../ui.js", import.meta.url), "utf8");
 
-  assert.match(index, /styles\.css\?v=1\.1\.4/);
-  assert.match(index, /ui\.js\?v=1\.1\.4/);
-  assert.match(ui, /model\.js\?v=1\.1\.4/);
+  assert.match(index, /styles\.css\?v=1\.2\.0/);
+  assert.match(index, /ui\.js\?v=1\.2\.0/);
+  assert.match(ui, /model\.js\?v=1\.2\.0/);
+  assert.match(ui, /forge-models\.js\?v=1\.2\.0/);
   assert.match(ui, /defaults\.json\?v=\$\{ASSET_VERSION\}/);
+});
+
+test("model catalog exposes both comparisons and a useful space checklist", () => {
+  assert.deepEqual(Object.keys(FORGE_MODELS), ["buy-build", "terrestrial-space"]);
+  assert.equal(getForgeModel("unknown"), FORGE_MODELS["buy-build"]);
+  assert.ok(SPACE_MODEL_CONSIDERATIONS.length >= 8);
+  assert.ok(SPACE_MODEL_CONSIDERATIONS.some(item => /launch/i.test(item)));
+  assert.ok(SPACE_MODEL_CONSIDERATIONS.some(item => /thermal/i.test(item)));
 });

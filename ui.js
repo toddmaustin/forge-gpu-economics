@@ -1,6 +1,7 @@
-import { computeTCO, breakEvenFleet, sensitivity } from "./model.js?v=1.1.4";
+import { computeTCO, breakEvenFleet, sensitivity } from "./model.js?v=1.2.0";
+import { DEFAULT_MODEL_ID, FORGE_MODELS, getForgeModel } from "./forge-models.js?v=1.2.0";
 
-const ASSET_VERSION = "1.1.4";
+const ASSET_VERSION = "1.2.0";
 
 const $ = s => document.querySelector(s);
 const money = x => {
@@ -72,6 +73,40 @@ const groups = [
 ];
 
 let defaults;
+let activeModel = getForgeModel(new URLSearchParams(window.location.search).get("model"));
+
+function buildModelSelector() {
+  const selector = $("#model-selector");
+  selector.innerHTML = Object.values(FORGE_MODELS).map(model => `
+    <button class="model-option" type="button" role="radio" aria-checked="${model.id === activeModel.id}" data-model-id="${model.id}">
+      <span>${model.shortName}</span><small>${model.description}</small>
+    </button>`).join("");
+  selector.querySelectorAll("[data-model-id]").forEach(button => button.addEventListener("click", () => selectModel(button.dataset.modelId)));
+}
+
+function selectModel(id) {
+  activeModel = getForgeModel(id);
+  const url = new URL(window.location);
+  if (activeModel.id === DEFAULT_MODEL_ID) url.searchParams.delete("model");
+  else url.searchParams.set("model", activeModel.id);
+  window.history.replaceState({}, "", url);
+
+  document.querySelectorAll("[data-model-id]").forEach(button => {
+    button.setAttribute("aria-checked", String(button.dataset.modelId === activeModel.id));
+  });
+  $("#model-title").textContent = activeModel.title;
+  $("#model-description").textContent = activeModel.description;
+  $("#model-note").textContent = activeModel.considerations
+    ? "The current calculator is a shared-model starting point; space-specific costs are not yet included. See the browser console for the modeling checklist."
+    : "Adjust the shared hardware, fleet, and data-center assumptions below.";
+
+  if (activeModel.considerations) {
+    console.group("FORGE terrestrial vs. space-based CapEx/OpEx considerations");
+    activeModel.considerations.forEach((consideration, index) => console.info(`${index + 1}. ${consideration}`));
+    console.groupEnd();
+  }
+  render();
+}
 
 function displayValue(v, kind) {
   if (kind === "percent") return v * 100;
@@ -166,12 +201,19 @@ function render() {
   try {
     const z = computeTCO(x);
     $("#error").textContent = "";
-    $("#decision").textContent = z.decision;
-    $("#advantage").textContent = `${z.buildAdvantage >= 0 ? "BUILD" : "BUY"} advantage ${money(Math.abs(z.buildAdvantage))}`;
+    const winner = z.buildAdvantage >= 0 ? activeModel.left : activeModel.right;
+    $("#decision").textContent = winner;
+    $("#advantage").textContent = `${winner} advantage ${money(Math.abs(z.buildAdvantage))}`;
+    $("#build-tco-label").textContent = `${activeModel.left} TCO`;
+    $("#buy-tco-label").textContent = `${activeModel.right} TCO`;
     $("#build-tco").textContent = money(z.buildTCO);
     $("#buy-tco").textContent = money(z.buyTCO);
-    $("#build-composition-label").textContent = `BUILD (${money(z.buildTCO)})`;
-    $("#buy-composition-label").textContent = `BUY (${money(z.buyTCO)})`;
+    $("#build-composition-label").textContent = `${activeModel.left} (${money(z.buildTCO)})`;
+    $("#buy-composition-label").textContent = `${activeModel.right} (${money(z.buyTCO)})`;
+    $("#build-ledger-label").textContent = `${activeModel.left} cost ledger`;
+    $("#buy-ledger-label").textContent = `${activeModel.right} cost ledger`;
+    $("#break-even-detail").textContent = activeModel.id === "buy-build" ? "year-1 vendor GPUs" : "shared-model fleet units";
+    $("#sensitivity-description").textContent = `+20% one-at-a-time perturbation. Positive change favors ${activeModel.left}; negative favors ${activeModel.right}.`;
     const be = breakEvenFleet(x);
     $("#break-even").textContent = be.type === "value" ? num(be.fleet) : be.type === "below" ? "< 1" : `> ${num(be.fleet)}`;
 
@@ -222,8 +264,8 @@ function render() {
 
     const rows = (entries, total) => entries.map(([name, v]) => `<tr><td>${name}</td><td>${money(v)}</td><td>${(100 * v / total).toFixed(1)}%</td></tr>`).join("");
     const groupedRows = (groups, total) => groups.map(([name, entries]) => `<tr class="cost-group"><th colspan="3">${groupLabel(name, entries)}</th></tr>${rows(entries, total)}`).join("");
-    $("#buy-costs").innerHTML = groupedRows(buyGroups, z.buyTCO) + `<tr class="total"><td>Total BUY TCO</td><td>${money(z.buyTCO)}</td><td>100%</td></tr>`;
-    $("#build-costs").innerHTML = groupedRows(buildGroups, z.buildTCO) + `<tr class="total"><td>Total BUILD TCO</td><td>${money(z.buildTCO)}</td><td>100%</td></tr>`;
+    $("#buy-costs").innerHTML = groupedRows(buyGroups, z.buyTCO) + `<tr class="total"><td>Total ${activeModel.right} TCO</td><td>${money(z.buyTCO)}</td><td>100%</td></tr>`;
+    $("#build-costs").innerHTML = groupedRows(buildGroups, z.buildTCO) + `<tr class="total"><td>Total ${activeModel.left} TCO</td><td>${money(z.buildTCO)}</td><td>100%</td></tr>`;
 
     try {
       const s = sensitivity(x);
@@ -241,9 +283,10 @@ function render() {
 
 async function init() {
   defaults = await fetch(`./defaults.json?v=${ASSET_VERSION}`, { cache: "no-store" }).then(r => r.json());
+  buildModelSelector();
   buildControls();
   $("#reset").addEventListener("click", () => { buildControls(); render(); });
-  render();
+  selectModel(activeModel.id);
 }
 
 init();
