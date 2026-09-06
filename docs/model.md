@@ -330,16 +330,184 @@ For construction-cost context, see:
 - Yield is an input rather than a defect-density model.
 - Dies per wafer is an approximation without explicit die aspect ratio, scribe lanes, or wafer-edge exclusion.
 
-## Space-based data-center first draft
+## Space-based data-center TCO model
 
-The **Terrestrial vs. space-based** view is a separate, parameterized scenario model. Its terrestrial side is the existing **Vendor IT (BUY)** calculation above, which keeps GPU, platform, facility, electricity, cooling-capacity, and vendor-support accounting consistent. Its illustrative inputs are stored in [`space-defaults.json`](../space-defaults.json) and the Reset button reloads that file.
+The **Terrestrial vs. space-based** view is a separate, parameterized scenario model. Its terrestrial side is the existing **Vendor IT (BUY)** calculation above, keeping GPU, platform, facility, electricity, cooling-capacity, and vendor-support accounting consistent. The orbital side estimates the fleet, power-system, thermal-system, launch, communications, operations, replacement, and disposal costs needed to deliver the same useful workload. Its illustrative inputs are stored in [`space-defaults.json`](../space-defaults.json), and the Reset button reloads that file.
 
-The space side converts terrestrial GPU-equivalent demand into an orbital fleet using useful-performance, compute-duty-cycle, ground-link weather availability, and radiation/fault redundancy assumptions:
+The comparison reports:
+
+$$A_S=TCO_{terrestrial}-TCO_{space}$$
+
+A positive $A_S$ favors SPACE-BASED, while a negative value favors TERRESTRIAL. As elsewhere in FORGE, costs are nominal sums over the model horizon rather than discounted cash flows.
+
+### Space-model variable glossary
+
+The terrestrial workload and hardware variables retain the definitions in the earlier tables. The following inputs are specific to the orbital model; JSON keys identify their machine-readable names in `space-defaults.json`.
+
+#### Fleet, platform, and launch
+
+| Symbol | JSON key | Definition |
+|---|---|---|
+| $c_L$ | `launch_cost_per_kg` | All-in launch and replenishment cost per kilogram, including the intended allowances for integration, schedule/risk, and insurance. |
+| $m_{payload}$ | `payload_mass_kg_per_gpu` | Compute-payload mass allocated to each orbital GPU. |
+| $m_{bus}$ | `bus_structure_mass_kg_per_gpu` | Spacecraft bus and structural mass allocated to each GPU. |
+| $m_{shield}$ | `shielding_mass_kg_per_gpu` | Radiation and physical shielding mass allocated to each GPU. |
+| $m_{prop}$ | `propulsion_mass_kg_per_gpu` | Propulsion and propellant mass allocated to each GPU for station keeping and collision avoidance. |
+| $R_{perf}$ | `space_useful_performance_ratio` | Useful workload throughput of one orbital GPU relative to one terrestrial vendor GPU. |
+| $R_{rad}$ | `radiation_redundancy_factor` | Extra fleet multiplier for radiation effects, faults, and redundancy. |
+| $L$ | `space_hardware_lifetime_years` | Assumed orbital hardware service life used by the annual replacement allowance. |
+| $C_Q$ | `qualification_nre` | One-time space-qualification engineering and non-recurring cost. |
+| $c_{platform}$ | `space_platform_cost_per_gpu` | Spacecraft platform hardware cost allocated to each newly launched GPU. |
+
+#### Power and thermal systems
+
+| Symbol | JSON key | Definition |
+|---|---|---|
+| $p_{solar}$ | `solar_specific_power_w_per_kg` | Beginning-of-life solar-array output per kilogram. |
+| $c_{solar}$ | `solar_array_cost_per_w` | Solar-array acquisition cost per watt of rated output. |
+| $d_{solar}$ | `solar_annual_degradation` | Fractional annual degradation in solar output. |
+| $\eta_{point}$ | `solar_pointing_efficiency` | Fraction of rated solar output delivered after pointing losses. |
+| $D_{compute}$ | `compute_duty_cycle` | Fraction of time for which the IT load is assumed to compute and produce heat. |
+| $H_{eclipse}$ | `eclipse_hours_per_day` | Daily hours of battery-supported eclipse operation. |
+| $e_{battery}$ | `battery_specific_energy_wh_per_kg` | Usable battery energy per kilogram. |
+| $c_{battery}$ | `battery_cost_per_kwh` | Battery acquisition cost per kWh of capacity. |
+| $P_{bus}$ | `spacecraft_bus_power_w_per_gpu` | Continuous spacecraft-bus power allocated to each GPU. |
+| $q_{radiator}$ | `thermal_rejection_w_per_m2` | Radiator heat-rejection capability per square meter. |
+| $f_{view}$ | `radiator_view_factor` | Effective radiator view factor used to derate heat rejection. |
+| $m_{radiator}$ | `radiator_mass_kg_per_m2` | Deployed radiator mass per square meter. |
+| $c_{radiator}$ | `radiator_cost_per_m2` | Radiator acquisition cost per square meter. |
+
+#### Communications, operations, and disposal
+
+| Symbol | JSON key | Definition |
+|---|---|---|
+| $V_{data}$ | `data_tb_per_gpu_day` | Daily transferred data volume per orbital GPU. |
+| $e_{transfer}$ | `data_transfer_kwh_per_tb` | Electrical energy required to transfer one TB. |
+| $A_{weather}$ | `weather_availability` | Fraction of time the ground link is available after weather effects. |
+| $C_{ground}$ | `ground_station_capex` | One-time ground-station capital cost. |
+| $c_{link}$ | `inter_node_link_cost_per_gpu` | Inter-node communications hardware cost for each new GPU. |
+| $C_{spectrum}$ | `spectrum_licensing_per_year` | Annual spectrum and licensing expense. |
+| $C_{network}$ | `ground_network_ops_per_year` | Annual ground-network operating expense. |
+| $C_{mission}$ | `mission_control_per_year` | Annual mission-control and staffing expense. |
+| $C_{cyber}$ | `cybersecurity_per_year` | Annual cybersecurity expense. |
+| $C_{telemetry}$ | `telemetry_software_per_year` | Annual autonomy and telemetry software expense. |
+| $c_{ops}$ | `operations_per_spacecraft_year` | Annual per-orbital-GPU operations cost. |
+| $s$ | `spares_servicing_percent` | Spares and servicing allowance as a percentage of new compute and platform acquisition cost. |
+| $c_{EOL}$ | `end_of_life_cost_per_kg` | End-of-life handling and disposal cost per kilogram launched. |
+
+Derived quantities used below are:
+
+| Symbol | Definition |
+|---|---|
+| $N_S(t)$ | Orbital GPUs required in year $t$. |
+| $\Delta N_S(t)$ | New orbital GPUs acquired and launched in year $t$, including replacements. |
+| $P_{IT}$ | Per-GPU IT power before applying compute duty cycle. |
+| $P_{transfer}$ | Average per-GPU data-transfer power. |
+| $P_{avg}$ | Average per-GPU orbital electrical load. |
+| $m_{solar}(t)$ | Solar-array mass per new GPU in year $t$. |
+| $E_{battery}(t)$, $m_{battery}(t)$ | Required battery energy and mass per new GPU. |
+| $A_{radiator}$ | Radiator area per new GPU. |
+| $m_{dry}(t)$ | Total launched dry mass per new GPU. |
+
+### Workload-equivalent orbital fleet
+
+The model converts terrestrial GPU-equivalent demand into an orbital fleet using useful performance, compute duty cycle, ground-link weather availability, and radiation/fault redundancy:
 
 $$N_S(t)=\frac{N_V(t)R_{rad}}{R_{perf}D_{compute}A_{weather}}$$
 
-New launches cover demand growth plus a first-order annual replacement allowance, $N_S(t-1)/L$. Per-GPU launch mass includes compute payload, bus/structure, shielding, station-keeping/collision-avoidance propellant, solar array, battery, and radiator mass. The all-in launch-rate input is intended to include vehicle, integration, schedule/risk, insurance, and replenishment economics rather than only the advertised vehicle price.
+New hardware covers both demand growth and a first-order annual replacement allowance:
 
-Average orbital electrical load includes duty-cycled IT power, continuous spacecraft-bus power, and data-transfer energy. Solar mass accounts for specific power, pointing efficiency, and annual degradation. Battery mass depends on user-supplied eclipse hours; the sun-synchronous illustrative default assumes continuous sunlight and therefore zero battery energy. Thermal area is computed without convection as duty-cycled IT heat divided by radiator heat rejection and view factor.
+$$\Delta N_S(t)=\max(0,N_S(t)-N_S(t-1))+\begin{cases}0,&t=0\\N_S(t-1)/L,&t>0\end{cases}$$
 
-The space ledger also includes GPU and platform acquisition, space-qualification NRE, solar arrays, batteries, deployable radiators, ground stations, inter-node links, spectrum/licensing, network operations, mission control and staffing, cybersecurity, autonomy/telemetry software, per-node operations, spares/on-orbit servicing, and end-of-life disposal. These simplified relationships omit launch batching, detailed orbital mechanics, financing/discounting, revenue, latency valuation, spectrum throughput constraints, and correlated failures. They are suitable for first-pass scenario exploration, not mission design or a quote.
+This is a continuous economic approximation: it permits fractional units and does not batch GPUs into spacecraft or launch vehicles.
+
+### Orbital electrical load
+
+Per-GPU IT power uses the vendor logic, HBM, and host/network assumptions:
+
+$$P_{IT}=P_V+S_VP_H+P_S$$
+
+Average data-transfer power is:
+
+$$P_{transfer}=\frac{V_{data}e_{transfer}(1000)}{24}$$
+
+where the factor of 1000 converts kW to W. Average orbital load applies the compute duty cycle to IT power but treats bus and transfer power as continuous:
+
+$$P_{avg}=P_{IT}D_{compute}+P_{bus}+P_{transfer}$$
+
+### Solar arrays and batteries
+
+Solar mass accounts for specific power, pointing efficiency, and annual degradation:
+
+$$m_{solar}(t)=\frac{P_{avg}}{p_{solar}\eta_{point}(1-d_{solar})^t}$$
+
+Solar-array cost is charged on the rated output needed before pointing losses:
+
+$$C_{solar}(t)=\Delta N_S(t)\frac{P_{avg}}{\eta_{point}}c_{solar}$$
+
+Battery energy, mass, and cost are:
+
+$$E_{battery}=P_{avg}H_{eclipse}$$
+
+$$m_{battery}=\frac{E_{battery}}{e_{battery}}$$
+
+$$C_{battery}(t)=\Delta N_S(t)\frac{E_{battery}}{1000}c_{battery}$$
+
+The illustrative sun-synchronous default assumes continuous sunlight and sets eclipse hours, battery energy, battery mass, and battery cost to zero. Other orbital scenarios should provide an appropriate eclipse duration.
+
+### Radiative thermal system
+
+With no convective cooling, radiator area is estimated from duty-cycled IT heat, radiator heat rejection, and view factor:
+
+$$A_{radiator}=\frac{P_{IT}D_{compute}}{q_{radiator}f_{view}}$$
+
+$$m_{radiator,total}=A_{radiator}m_{radiator}$$
+
+$$C_{thermal}(t)=\Delta N_S(t)A_{radiator}c_{radiator}$$
+
+### Launch mass and cost
+
+Per-GPU launched dry mass includes compute payload, bus/structure, shielding, propulsion, solar array, battery, and radiator mass:
+
+$$m_{dry}(t)=m_{payload}+m_{bus}+m_{shield}+m_{prop}+m_{solar}(t)+m_{battery}+m_{radiator,total}$$
+
+Launch and end-of-life charges are:
+
+$$C_{launch}(t)=\Delta N_S(t)m_{dry}(t)c_L$$
+
+$$C_{EOL}(t)=\Delta N_S(t)m_{dry}(t)c_{EOL}$$
+
+The launch-rate input is intended to represent all-in vehicle, integration, schedule/risk, insurance, and replenishment economics rather than only an advertised vehicle price.
+
+### Space cost ledger
+
+The space ledger contains these CAPEX components:
+
+- vendor GPU acquisition for new and replacement units, including vendor GPU price growth;
+- space-platform acquisition;
+- space-qualification NRE;
+- launch;
+- solar arrays, batteries, and deployable radiators; and
+- initial ground-station CAPEX.
+
+Its OPEX components are:
+
+- inter-node links, annual spectrum/licensing, and ground-network operations;
+- mission control and staffing, cybersecurity, and autonomy/telemetry software;
+- per-node annual operations;
+- spares and on-orbit servicing; and
+- end-of-life disposal.
+
+The recurring spares and servicing allowance is:
+
+$$C_{spares}(t)=s\left[C_{hardware}(t)+C_{platform}(t)\right]$$
+
+where $s$ is entered as a percentage and converted to a fraction by the implementation. Total space TCO is the sum of every ledger category over the horizon plus one-time qualification and ground-station costs.
+
+### Space sensitivity analysis
+
+The space view applies the same +20% one-at-a-time method to selected orbital inputs, then ranks them by the absolute change in $A_S$. The tested inputs cover launch cost, payload mass, useful performance, radiation redundancy, hardware lifetime, solar performance and degradation, compute duty cycle, radiator mass, weather availability, data volume, mission control, and spares/servicing. Inputs representing bounded fractions are capped at 100% where applicable.
+
+### Space-model limitations
+
+The orbital relationships omit launch batching, vehicle payload constraints, detailed orbital mechanics, financing/discounting, revenue, latency valuation, communications and spectrum throughput constraints, detailed radiation degradation, thermal transients, attitude constraints, discrete unit counts, and correlated failures. The redundancy factor, duty cycle, weather availability, and lifetime allowance are simplified proxies rather than availability or reliability simulations. The model is therefore suitable for first-pass scenario and sensitivity exploration, not mission design, a price quote, or a forecast.
