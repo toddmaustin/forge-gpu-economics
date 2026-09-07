@@ -368,7 +368,7 @@ The terrestrial workload and hardware variables retain the definitions in the ea
 | $c_{solar}$ | Solar array cost | $35/W | Solar-array acquisition cost per watt of rated output. |
 | $d_{solar}$ | Solar degradation/year | 2.5% | Fractional annual degradation in solar output. |
 | $\eta_{point}$ | Solar pointing efficiency | 90% | Fraction of rated solar output delivered after pointing losses. |
-| $D_{compute}$ | Compute duty cycle | 85% | Fraction of time for which the IT load is assumed to compute and produce heat. |
+| $D_{compute}$ | Compute duty cycle | 90% | Fraction of time for which the IT load is assumed to compute and produce heat. |
 | $H_{eclipse}$ | Eclipse duration | 0 hours/day | Daily hours of battery-supported eclipse operation. |
 | $e_{battery}$ | Battery specific energy | 180 Wh/kg | Usable battery energy per kilogram. |
 | $c_{battery}$ | Battery cost | $1,000/kWh | Battery acquisition cost per kWh of capacity. |
