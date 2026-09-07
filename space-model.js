@@ -8,9 +8,11 @@ export const SPACE_SENSITIVITY_FIELDS = [
   ["space_useful_performance_ratio", "Space useful performance"],
   ["radiation_redundancy_factor", "Radiation redundancy"],
   ["space_hardware_lifetime_years", "Hardware lifetime"],
-  ["solar_specific_power_w_per_kg", "Solar specific power"],
+  ["solar_power_density_kw_per_m2", "Solar power density"],
+  ["solar_mass_kg_per_m2", "Solar areal mass"],
   ["solar_annual_degradation", "Solar degradation"],
   ["compute_duty_cycle", "Compute duty cycle"],
+  ["radiator_thermal_radiation_kw_per_m2", "Radiator thermal radiation"],
   ["radiator_mass_kg_per_m2", "Radiator mass"],
   ["weather_availability", "Link weather availability"],
   ["data_tb_per_gpu_day", "Daily data volume"],
@@ -28,7 +30,7 @@ export function normalizeSpaceInputs(raw) {
   const x = { ...raw };
   Object.keys(x).filter(key => typeof x[key] === "number").forEach(key => { x[key] = finite(x, key); });
   for (const key of ["fleet_year1", "horizon_years", "space_useful_performance_ratio", "space_hardware_lifetime_years",
-    "solar_specific_power_w_per_kg", "solar_pointing_efficiency", "compute_duty_cycle", "thermal_rejection_w_per_m2",
+    "solar_power_density_kw_per_m2", "solar_mass_kg_per_m2", "solar_pointing_efficiency", "compute_duty_cycle", "radiator_thermal_radiation_kw_per_m2",
     "radiator_view_factor", "battery_specific_energy_wh_per_kg", "weather_availability"]) {
     if (!(x[key] > 0)) throw new Error(`${key} must be positive.`);
   }
@@ -61,11 +63,14 @@ export function computeSpaceTCO(raw) {
     const itPowerW = x.vendor_logic_power_w + x.vendor_hbm_stacks * x.hbm_power_w_per_stack + x.host_network_power_w_per_device;
     const transferPowerW = x.data_tb_per_gpu_day * x.data_transfer_kwh_per_tb * 1000 / 24;
     const averagePowerW = itPowerW * x.compute_duty_cycle + x.spacecraft_bus_power_w_per_gpu + transferPowerW;
-    const degradedOutput = x.solar_specific_power_w_per_kg * x.solar_pointing_efficiency * (1 - x.solar_annual_degradation) ** t;
-    const solarMassKg = averagePowerW / degradedOutput;
+    const solarOutputWPerM2 = x.solar_power_density_kw_per_m2 * 1000 * x.solar_pointing_efficiency *
+      (1 - x.solar_annual_degradation) ** t;
+    const solarAreaM2 = averagePowerW / solarOutputWPerM2;
+    const solarMassKg = solarAreaM2 * x.solar_mass_kg_per_m2;
     const batteryEnergyWh = averagePowerW * x.eclipse_hours_per_day;
     const batteryMassKg = batteryEnergyWh / x.battery_specific_energy_wh_per_kg;
-    const radiatorAreaM2 = itPowerW * x.compute_duty_cycle / (x.thermal_rejection_w_per_m2 * x.radiator_view_factor);
+    const radiatorOutputWPerM2 = x.radiator_thermal_radiation_kw_per_m2 * 1000 * x.radiator_view_factor;
+    const radiatorAreaM2 = itPowerW * x.compute_duty_cycle / radiatorOutputWPerM2;
     const radiatorMassKg = radiatorAreaM2 * x.radiator_mass_kg_per_m2;
     const dryMassKg = x.payload_mass_kg_per_gpu + x.bus_structure_mass_kg_per_gpu + x.shielding_mass_kg_per_gpu +
       x.propulsion_mass_kg_per_gpu + solarMassKg + batteryMassKg + radiatorMassKg;
@@ -76,14 +81,14 @@ export function computeSpaceTCO(raw) {
     space.computeHardware += hardwareCost;
     space.spacePlatform += platformCost;
     space.launch += newUnits * dryMassKg * x.launch_cost_per_kg;
-    space.solarArrays += newUnits * averagePowerW / x.solar_pointing_efficiency * x.solar_array_cost_per_w;
+    space.solarArrays += newUnits * solarAreaM2 * x.solar_power_density_kw_per_m2 * 1000 * x.solar_array_cost_per_w;
     space.batteries += newUnits * batteryEnergyWh / 1000 * x.battery_cost_per_kwh;
     space.thermal += newUnits * radiatorAreaM2 * x.radiator_cost_per_m2;
     space.communications += newUnits * x.inter_node_link_cost_per_gpu + x.spectrum_licensing_per_year + x.ground_network_ops_per_year;
     space.missionOperations += x.mission_control_per_year + x.cybersecurity_per_year + x.telemetry_software_per_year + requiredGPUs * x.operations_per_spacecraft_year;
     space.sparesServicing += (hardwareCost + platformCost) * x.spares_servicing_percent / 100;
     space.endOfLife += newUnits * dryMassKg * x.end_of_life_cost_per_kg;
-    yearly.push({ year: t + 1, workloadGPUs, requiredGPUs, newUnits, replacementUnits, itPowerW, averagePowerW, solarMassKg, batteryMassKg, radiatorAreaM2, radiatorMassKg, dryMassKg });
+    yearly.push({ year: t + 1, workloadGPUs, requiredGPUs, newUnits, replacementUnits, itPowerW, averagePowerW, solarAreaM2, solarMassKg, batteryMassKg, radiatorAreaM2, radiatorMassKg, dryMassKg });
     priorRequired = requiredGPUs;
   }
 
