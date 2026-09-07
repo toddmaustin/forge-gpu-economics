@@ -373,12 +373,14 @@ The terrestrial workload and hardware variables retain the definitions in the ea
 | $e_{battery}$ | Battery specific energy | 180 Wh/kg | Usable battery energy per kilogram. |
 | $c_{battery}$ | Battery cost | $1,000/kWh | Battery acquisition cost per kWh of capacity. |
 | $P_{bus}$ | Spacecraft bus power | 100 W/GPU | Continuous spacecraft-bus power allocated to each GPU. |
-| $q_{radiator}$ | Thermal rejection | 350 W/m² | Radiator heat-rejection capability per square meter. |
+| $q_{radiator}$ | Thermal radiation | 0.35 kW/m² | Radiator heat-rejection capability per square meter. |
 | $f_{view}$ | Radiator view factor | 0.8 | Effective radiator view factor used to derate heat rejection. |
-| $m_{radiator}$ | Radiator mass | 7 kg/m² | Deployed radiator mass per square meter. |
+| $\mu_{radiator}$ | Radiator panel mass | 7 kg/m² | Deployed radiator mass per square meter. |
 | $c_{radiator}$ | Radiator cost | $10,000/m² | Radiator acquisition cost per square meter. |
 
 For compatibility with cached versions of the calculator, `space-defaults.json` also retains the deprecated `solar_specific_power_w_per_kg` value. Version 1.4.0 and later do not use that field; its default is equivalent to the two area-based defaults above.
+
+The defaults likewise retain the deprecated `thermal_rejection_w_per_m2` value for cached pre-1.5 calculator code. Version 1.5.0 and later use `radiator_thermal_radiation_kw_per_m2` instead.
 
 #### Communications, operations, and disposal
 
@@ -462,11 +464,11 @@ The illustrative sun-synchronous default assumes continuous sunlight and sets ec
 
 ### Radiative thermal system
 
-With no convective cooling, radiator area is estimated from duty-cycled IT heat, radiator heat rejection, and view factor:
+With no convective cooling, radiator-panel area is derived first from duty-cycled IT heat, thermal radiation, and view factor (the factor of 1000 converts kW to W). Panel mass is then derived from that area and its areal mass:
 
-$$A_{radiator}=\frac{P_{IT}D_{compute}}{q_{radiator}f_{view}}$$
+$$A_{radiator}=\frac{P_{IT}D_{compute}}{1000q_{radiator}f_{view}}$$
 
-$$m_{radiator,total}=A_{radiator}m_{radiator}$$
+$$m_{radiator,total}=A_{radiator}\mu_{radiator}$$
 
 $$C_{thermal}(t)=\Delta N_S(t)A_{radiator}c_{radiator}$$
 

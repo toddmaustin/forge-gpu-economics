@@ -12,6 +12,7 @@ export const SPACE_SENSITIVITY_FIELDS = [
   ["solar_mass_kg_per_m2", "Solar areal mass"],
   ["solar_annual_degradation", "Solar degradation"],
   ["compute_duty_cycle", "Compute duty cycle"],
+  ["radiator_thermal_radiation_kw_per_m2", "Radiator thermal radiation"],
   ["radiator_mass_kg_per_m2", "Radiator mass"],
   ["weather_availability", "Link weather availability"],
   ["data_tb_per_gpu_day", "Daily data volume"],
@@ -29,7 +30,7 @@ export function normalizeSpaceInputs(raw) {
   const x = { ...raw };
   Object.keys(x).filter(key => typeof x[key] === "number").forEach(key => { x[key] = finite(x, key); });
   for (const key of ["fleet_year1", "horizon_years", "space_useful_performance_ratio", "space_hardware_lifetime_years",
-    "solar_power_density_kw_per_m2", "solar_mass_kg_per_m2", "solar_pointing_efficiency", "compute_duty_cycle", "thermal_rejection_w_per_m2",
+    "solar_power_density_kw_per_m2", "solar_mass_kg_per_m2", "solar_pointing_efficiency", "compute_duty_cycle", "radiator_thermal_radiation_kw_per_m2",
     "radiator_view_factor", "battery_specific_energy_wh_per_kg", "weather_availability"]) {
     if (!(x[key] > 0)) throw new Error(`${key} must be positive.`);
   }
@@ -68,7 +69,8 @@ export function computeSpaceTCO(raw) {
     const solarMassKg = solarAreaM2 * x.solar_mass_kg_per_m2;
     const batteryEnergyWh = averagePowerW * x.eclipse_hours_per_day;
     const batteryMassKg = batteryEnergyWh / x.battery_specific_energy_wh_per_kg;
-    const radiatorAreaM2 = itPowerW * x.compute_duty_cycle / (x.thermal_rejection_w_per_m2 * x.radiator_view_factor);
+    const radiatorOutputWPerM2 = x.radiator_thermal_radiation_kw_per_m2 * 1000 * x.radiator_view_factor;
+    const radiatorAreaM2 = itPowerW * x.compute_duty_cycle / radiatorOutputWPerM2;
     const radiatorMassKg = radiatorAreaM2 * x.radiator_mass_kg_per_m2;
     const dryMassKg = x.payload_mass_kg_per_gpu + x.bus_structure_mass_kg_per_gpu + x.shielding_mass_kg_per_gpu +
       x.propulsion_mass_kg_per_gpu + solarMassKg + batteryMassKg + radiatorMassKg;

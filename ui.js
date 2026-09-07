@@ -1,9 +1,9 @@
-import { computeTCO, breakEvenFleet, sensitivity } from "./model.js?v=1.4.0";
-import { DEFAULT_MODEL_ID, FORGE_MODELS, getForgeModel } from "./forge-models.js?v=1.4.0";
-import { inputPresentation, valueFromInput } from "./input-units.js?v=1.4.0";
-import { computeSpaceTCO, spaceSensitivity } from "./space-model.js?v=1.4.0";
+import { computeTCO, breakEvenFleet, sensitivity } from "./model.js?v=1.5.0";
+import { DEFAULT_MODEL_ID, FORGE_MODELS, getForgeModel } from "./forge-models.js?v=1.5.0";
+import { inputPresentation, valueFromInput } from "./input-units.js?v=1.5.0";
+import { computeSpaceTCO, spaceSensitivity } from "./space-model.js?v=1.5.0";
 
-const ASSET_VERSION = "1.4.0";
+const ASSET_VERSION = "1.5.0";
 
 const $ = s => document.querySelector(s);
 const money = x => {
@@ -94,7 +94,7 @@ const spaceGroups = [
     ["eclipse_hours_per_day", "Eclipse hours / day (sun-sync default: 0)", "number", 0.1], ["battery_specific_energy_wh_per_kg", "Battery specific energy (Wh/kg)", "number", 10], ["battery_cost_per_kwh", "Battery cost / kWh", "currency", 100]
   ]],
   ["Radiative thermal system", [
-    ["thermal_rejection_w_per_m2", "Radiator rejection (W/m²)", "number", 10], ["radiator_view_factor", "Radiator view factor", "percent", 1], ["radiator_mass_kg_per_m2", "Deployable radiator mass (kg/m²)", "number", 0.5], ["radiator_cost_per_m2", "Radiator cost / m²", "currency", 500]
+    ["radiator_thermal_radiation_kw_per_m2", "Thermal radiation (kW/m²)", "number", 0.01], ["radiator_view_factor", "Radiator view factor", "percent", 1], ["radiator_mass_kg_per_m2", "Radiator panel mass (kg/m²)", "number", 0.5], ["radiator_cost_per_m2", "Radiator cost / m²", "currency", 500]
   ]],
   ["Communications", [
     ["data_tb_per_gpu_day", "Data transferred / GPU-day (TB)", "number", 0.01], ["data_transfer_kwh_per_tb", "Transfer energy (kWh/TB)", "number", 0.1], ["weather_availability", "Ground-link weather availability", "percent", 1],

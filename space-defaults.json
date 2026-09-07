@@ -1,5 +1,5 @@
 {
-  "model_version": "1.4.0",
+  "model_version": "1.5.0",
   "baseline_label": "2026 illustrative space baseline",
   "foundry": "TSMC",
   "process_node": "N3 / N3E (3 nm class)",
@@ -61,6 +61,7 @@
   "battery_specific_energy_wh_per_kg": 180,
   "battery_cost_per_kwh": 1000,
   "spacecraft_bus_power_w_per_gpu": 100,
+  "radiator_thermal_radiation_kw_per_m2": 0.35,
   "thermal_rejection_w_per_m2": 350,
   "radiator_view_factor": 0.8,
   "radiator_mass_kg_per_m2": 7,
