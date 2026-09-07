@@ -70,11 +70,12 @@ test("browser entry points cache-bust the current assets", () => {
   const index = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
   const ui = fs.readFileSync(new URL("../ui.js", import.meta.url), "utf8");
 
-  assert.match(index, /styles\.css\?v=1\.3\.1/);
-  assert.match(index, /ui\.js\?v=1\.3\.1/);
-  assert.match(ui, /model\.js\?v=1\.3\.1/);
-  assert.match(ui, /forge-models\.js\?v=1\.3\.1/);
-  assert.match(ui, /input-units\.js\?v=1\.3\.1/);
+  assert.match(index, /styles\.css\?v=1\.4\.0/);
+  assert.match(index, /ui\.js\?v=1\.4\.0/);
+  assert.match(ui, /model\.js\?v=1\.4\.0/);
+  assert.match(ui, /forge-models\.js\?v=1\.4\.0/);
+  assert.match(ui, /input-units\.js\?v=1\.4\.0/);
+  assert.match(ui, /space-model\.js\?v=1\.4\.0/);
   assert.match(ui, /\$\{file\}\?v=\$\{ASSET_VERSION\}/);
 });
 
@@ -108,6 +109,14 @@ test("space model produces balanced, finite ledgers against Vendor IT", () => {
   assert.ok(Math.abs(Object.values(z.space).reduce((a, b) => a + b, 0) - z.spaceTCO) < 1e-6);
   assert.ok(Math.abs(z.spaceCostTypes.capex + z.spaceCostTypes.opex - z.spaceTCO) < 1e-3);
   assert.equal(z.terrestrialTCO, computeTCO(spaceDefaults).buyTCO);
+});
+
+test("space defaults remain compatible with cached pre-1.4 solar models", () => {
+  assert.ok(spaceDefaults.solar_specific_power_w_per_kg > 0);
+  assert.equal(
+    spaceDefaults.solar_specific_power_w_per_kg,
+    spaceDefaults.solar_power_density_kw_per_m2 * 1000 / spaceDefaults.solar_mass_kg_per_m2
+  );
 });
 
 test("space mass, availability, batteries, and launch costs respond to parameters", () => {

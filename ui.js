@@ -1,9 +1,9 @@
-import { computeTCO, breakEvenFleet, sensitivity } from "./model.js?v=1.3.1";
-import { DEFAULT_MODEL_ID, FORGE_MODELS, getForgeModel } from "./forge-models.js?v=1.3.1";
-import { inputPresentation, valueFromInput } from "./input-units.js?v=1.3.1";
-import { computeSpaceTCO, spaceSensitivity } from "./space-model.js?v=1.3.1";
+import { computeTCO, breakEvenFleet, sensitivity } from "./model.js?v=1.4.0";
+import { DEFAULT_MODEL_ID, FORGE_MODELS, getForgeModel } from "./forge-models.js?v=1.4.0";
+import { inputPresentation, valueFromInput } from "./input-units.js?v=1.4.0";
+import { computeSpaceTCO, spaceSensitivity } from "./space-model.js?v=1.4.0";
 
-const ASSET_VERSION = "1.3.1";
+const ASSET_VERSION = "1.4.0";
 
 const $ = s => document.querySelector(s);
 const money = x => {

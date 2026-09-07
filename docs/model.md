@@ -378,6 +378,8 @@ The terrestrial workload and hardware variables retain the definitions in the ea
 | $m_{radiator}$ | Radiator mass | 7 kg/m² | Deployed radiator mass per square meter. |
 | $c_{radiator}$ | Radiator cost | $10,000/m² | Radiator acquisition cost per square meter. |
 
+For compatibility with cached versions of the calculator, `space-defaults.json` also retains the deprecated `solar_specific_power_w_per_kg` value. Version 1.4.0 and later do not use that field; its default is equivalent to the two area-based defaults above.
+
 #### Communications, operations, and disposal
 
 | Symbol | Parameter | Default | Definition |

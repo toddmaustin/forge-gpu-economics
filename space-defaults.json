@@ -52,6 +52,7 @@
   "space_platform_cost_per_gpu": 20000,
   "solar_power_density_kw_per_m2": 0.3,
   "solar_mass_kg_per_m2": 2,
+  "solar_specific_power_w_per_kg": 150,
   "solar_array_cost_per_w": 35,
   "solar_annual_degradation": 0.025,
   "solar_pointing_efficiency": 0.9,
