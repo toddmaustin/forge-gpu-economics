@@ -72,7 +72,7 @@ export function computeSpaceTCO(raw) {
     const radiatorOutputWPerM2 = x.radiator_thermal_radiation_kw_per_m2 * 1000 * x.radiator_view_factor;
     const radiatorAreaM2 = itPowerW * x.compute_duty_cycle / radiatorOutputWPerM2;
     const radiatorMassKg = radiatorAreaM2 * x.radiator_mass_kg_per_m2;
-    const totalITPowerW = requiredGPUs * itPowerW;
+    const totalITPowerW = requiredGPUs * itPowerW * x.compute_duty_cycle;
     const totalSolarPowerW = requiredGPUs * solarAreaM2 * solarOutputWPerM2;
     const totalSolarAreaKm2 = requiredGPUs * solarAreaM2 / 1e6;
     const totalHeatRadiationW = requiredGPUs * radiatorAreaM2 * radiatorOutputWPerM2;
