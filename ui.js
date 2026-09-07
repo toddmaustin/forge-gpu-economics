@@ -1,9 +1,9 @@
-import { computeTCO, breakEvenFleet, sensitivity } from "./model.js?v=1.3.1";
-import { DEFAULT_MODEL_ID, FORGE_MODELS, getForgeModel } from "./forge-models.js?v=1.3.1";
-import { inputPresentation, valueFromInput } from "./input-units.js?v=1.3.1";
-import { computeSpaceTCO, spaceSensitivity } from "./space-model.js?v=1.3.1";
+import { computeTCO, breakEvenFleet, sensitivity } from "./model.js?v=1.4.0";
+import { DEFAULT_MODEL_ID, FORGE_MODELS, getForgeModel } from "./forge-models.js?v=1.4.0";
+import { inputPresentation, valueFromInput } from "./input-units.js?v=1.4.0";
+import { computeSpaceTCO, spaceSensitivity } from "./space-model.js?v=1.4.0";
 
-const ASSET_VERSION = "1.3.1";
+const ASSET_VERSION = "1.4.0";
 
 const $ = s => document.querySelector(s);
 const money = x => {
@@ -89,7 +89,7 @@ const spaceGroups = [
     ["qualification_nre", "Space qualification NRE", "currency", 10000000], ["space_platform_cost_per_gpu", "Space platform electronics / GPU", "currency", 1000], ["spares_servicing_percent", "Spares & servicing / new hardware", "percentage", 1]
   ]],
   ["Solar power & batteries", [
-    ["solar_specific_power_w_per_kg", "Solar specific power (W/kg)", "number", 10], ["solar_array_cost_per_w", "Solar array cost / W", "currency", 1], ["solar_annual_degradation", "Solar degradation / year", "percent", 0.5],
+    ["solar_power_density_kw_per_m2", "Solar power density (kW/m²)", "number", 0.01], ["solar_mass_kg_per_m2", "Solar panel mass (kg/m²)", "number", 0.1], ["solar_array_cost_per_w", "Solar array cost / W", "currency", 1], ["solar_annual_degradation", "Solar degradation / year", "percent", 0.5],
     ["solar_pointing_efficiency", "Solar pointing efficiency", "percent", 1], ["compute_duty_cycle", "Peak-vs-average compute duty cycle", "percent", 1], ["spacecraft_bus_power_w_per_gpu", "Spacecraft bus power / GPU (W)", "number", 10],
     ["eclipse_hours_per_day", "Eclipse hours / day (sun-sync default: 0)", "number", 0.1], ["battery_specific_energy_wh_per_kg", "Battery specific energy (Wh/kg)", "number", 10], ["battery_cost_per_kwh", "Battery cost / kWh", "currency", 100]
   ]],
@@ -342,7 +342,8 @@ function renderSpace() {
     $("#fleet-summary").innerHTML = `<div><span>Year-1 workload</span><strong>${num(y.workloadGPUs)} GPU-eq.</strong></div><div><span>Required orbital GPUs</span><strong>${num(y.requiredGPUs)}</strong></div>
       <div><span>Useful service availability</span><strong>${(100*x.space_useful_performance_ratio*x.compute_duty_cycle*x.weather_availability).toFixed(1)}%</strong></div><div><span>IT power / GPU</span><strong>${power(y.itPowerW)}</strong></div>
       <div><span>Average orbital power / GPU</span><strong>${power(y.averagePowerW)}</strong></div><div><span>Launch mass / GPU</span><strong>${y.dryMassKg.toFixed(1)} kg</strong></div>
-      <div><span>Solar mass / GPU</span><strong>${y.solarMassKg.toFixed(1)} kg</strong></div><div><span>Battery mass / GPU</span><strong>${y.batteryMassKg.toFixed(1)} kg</strong></div>
+      <div><span>Solar panel area / GPU</span><strong>${y.solarAreaM2.toFixed(1)} m²</strong></div><div><span>Solar mass / GPU</span><strong>${y.solarMassKg.toFixed(1)} kg</strong></div>
+      <div><span>Battery mass / GPU</span><strong>${y.batteryMassKg.toFixed(1)} kg</strong></div>
       <div><span>Radiator area / GPU</span><strong>${y.radiatorAreaM2.toFixed(1)} m²</strong></div><div><span>Radiator mass / GPU</span><strong>${y.radiatorMassKg.toFixed(1)} kg</strong></div>`;
     const spaceGroups = [["Orbital hardware", [["Vendor compute hardware", z.space.computeHardware], ["Space platform", z.space.spacePlatform], ["Qualification NRE", z.space.qualification]]],
       ["Launch & spacecraft systems", [["All-in launch", z.space.launch], ["Solar arrays", z.space.solarArrays], ["Batteries", z.space.batteries], ["Radiators", z.space.thermal]]],

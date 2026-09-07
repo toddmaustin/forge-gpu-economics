@@ -363,7 +363,8 @@ The terrestrial workload and hardware variables retain the definitions in the ea
 
 | Symbol | Parameter | Default | Definition |
 |---|---|---:|---|
-| $p_{solar}$ | Solar specific power | 150 W/kg | Beginning-of-life solar-array output per kilogram. |
+| $q_{solar}$ | Solar power density | 0.3 kW/m² | Beginning-of-life rated solar-array output per square meter. |
+| $\mu_{solar}$ | Solar panel mass | 2 kg/m² | Solar-array mass per square meter, used to calculate launched mass. |
 | $c_{solar}$ | Solar array cost | $35/W | Solar-array acquisition cost per watt of rated output. |
 | $d_{solar}$ | Solar degradation/year | 2.5% | Fractional annual degradation in solar output. |
 | $\eta_{point}$ | Solar pointing efficiency | 90% | Fraction of rated solar output delivered after pointing losses. |
@@ -376,6 +377,8 @@ The terrestrial workload and hardware variables retain the definitions in the ea
 | $f_{view}$ | Radiator view factor | 0.8 | Effective radiator view factor used to derate heat rejection. |
 | $m_{radiator}$ | Radiator mass | 7 kg/m² | Deployed radiator mass per square meter. |
 | $c_{radiator}$ | Radiator cost | $10,000/m² | Radiator acquisition cost per square meter. |
+
+For compatibility with cached versions of the calculator, `space-defaults.json` also retains the deprecated `solar_specific_power_w_per_kg` value. Version 1.4.0 and later do not use that field; its default is equivalent to the two area-based defaults above.
 
 #### Communications, operations, and disposal
 
@@ -404,7 +407,7 @@ Derived quantities used below are:
 | $P_{IT}$ | Per-GPU IT power before applying compute duty cycle. |
 | $P_{transfer}$ | Average per-GPU data-transfer power. |
 | $P_{avg}$ | Average per-GPU orbital electrical load. |
-| $m_{solar}(t)$ | Solar-array mass per new GPU in year $t$. |
+| $A_{solar}(t)$, $m_{solar}(t)$ | Solar-array area and mass per new GPU in year $t$. |
 | $E_{battery}(t)$, $m_{battery}(t)$ | Required battery energy and mass per new GPU. |
 | $A_{radiator}$ | Radiator area per new GPU. |
 | $m_{dry}(t)$ | Total launched dry mass per new GPU. |
@@ -437,13 +440,15 @@ $$P_{avg}=P_{IT}D_{compute}+P_{bus}+P_{transfer}$$
 
 ### Solar arrays and batteries
 
-Solar mass accounts for specific power, pointing efficiency, and annual degradation:
+Solar-panel area is derived first from power density, pointing efficiency, and annual degradation (the factor of 1000 converts kW to W). Panel mass is then derived from its area and areal mass density:
 
-$$m_{solar}(t)=\frac{P_{avg}}{p_{solar}\eta_{point}(1-d_{solar})^t}$$
+$$A_{solar}(t)=\frac{P_{avg}}{1000q_{solar}\eta_{point}(1-d_{solar})^t}$$
+
+$$m_{solar}(t)=A_{solar}(t)\mu_{solar}$$
 
 Solar-array cost is charged on the rated output needed before pointing losses:
 
-$$C_{solar}(t)=\Delta N_S(t)\frac{P_{avg}}{\eta_{point}}c_{solar}$$
+$$C_{solar}(t)=\Delta N_S(t)A_{solar}(t)(1000q_{solar})c_{solar}$$
 
 Battery energy, mass, and cost are:
 

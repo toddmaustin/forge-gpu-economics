@@ -70,11 +70,12 @@ test("browser entry points cache-bust the current assets", () => {
   const index = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
   const ui = fs.readFileSync(new URL("../ui.js", import.meta.url), "utf8");
 
-  assert.match(index, /styles\.css\?v=1\.3\.1/);
-  assert.match(index, /ui\.js\?v=1\.3\.1/);
-  assert.match(ui, /model\.js\?v=1\.3\.1/);
-  assert.match(ui, /forge-models\.js\?v=1\.3\.1/);
-  assert.match(ui, /input-units\.js\?v=1\.3\.1/);
+  assert.match(index, /styles\.css\?v=1\.4\.0/);
+  assert.match(index, /ui\.js\?v=1\.4\.0/);
+  assert.match(ui, /model\.js\?v=1\.4\.0/);
+  assert.match(ui, /forge-models\.js\?v=1\.4\.0/);
+  assert.match(ui, /input-units\.js\?v=1\.4\.0/);
+  assert.match(ui, /space-model\.js\?v=1\.4\.0/);
   assert.match(ui, /\$\{file\}\?v=\$\{ASSET_VERSION\}/);
 });
 
@@ -110,6 +111,14 @@ test("space model produces balanced, finite ledgers against Vendor IT", () => {
   assert.equal(z.terrestrialTCO, computeTCO(spaceDefaults).buyTCO);
 });
 
+test("space defaults remain compatible with cached pre-1.4 solar models", () => {
+  assert.ok(spaceDefaults.solar_specific_power_w_per_kg > 0);
+  assert.equal(
+    spaceDefaults.solar_specific_power_w_per_kg,
+    spaceDefaults.solar_power_density_kw_per_m2 * 1000 / spaceDefaults.solar_mass_kg_per_m2
+  );
+});
+
 test("space mass, availability, batteries, and launch costs respond to parameters", () => {
   const base = computeSpaceTCO(spaceDefaults);
   const eclipse = computeSpaceTCO({ ...spaceDefaults, eclipse_hours_per_day: 1 });
@@ -118,11 +127,16 @@ test("space mass, availability, batteries, and launch costs respond to parameter
   assert.ok(eclipse.space.batteries > 0);
   assert.ok(eclipse.space.launch > base.space.launch);
   assert.ok(base.yearly[0].requiredGPUs > base.yearly[0].workloadGPUs);
+  assert.equal(base.yearly[0].solarMassKg, base.yearly[0].solarAreaM2 * spaceDefaults.solar_mass_kg_per_m2);
+  const heavierSolar = computeSpaceTCO({ ...spaceDefaults, solar_mass_kg_per_m2: 4 });
+  assert.equal(heavierSolar.yearly[0].solarAreaM2, base.yearly[0].solarAreaM2);
+  assert.ok(heavierSolar.yearly[0].solarMassKg > base.yearly[0].solarMassKg);
+  assert.ok(heavierSolar.space.launch > base.space.launch);
 });
 
 test("space input validation and sensitivity are usable", () => {
   assert.throws(() => normalizeSpaceInputs({ ...spaceDefaults, weather_availability: 1.1 }), /no more than 100%/);
   const results = spaceSensitivity(spaceDefaults);
-  assert.equal(results.length, 13);
+  assert.equal(results.length, 14);
   assert.ok(results.every(result => Number.isFinite(result.delta)));
 });
