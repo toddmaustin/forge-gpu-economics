@@ -342,58 +342,58 @@ A positive $A_S$ favors SPACE-BASED, while a negative value favors TERRESTRIAL. 
 
 ### Space-model variable glossary
 
-The terrestrial workload and hardware variables retain the definitions in the earlier tables. The following inputs are specific to the orbital model; JSON keys identify their machine-readable names in `space-defaults.json`.
+The terrestrial workload and hardware variables retain the definitions in the earlier tables. The following inputs are specific to the orbital model; defaults are the illustrative values in `space-defaults.json`.
 
 #### Fleet, platform, and launch
 
-| Symbol | JSON key | Definition |
-|---|---|---|
-| $c_L$ | `launch_cost_per_kg` | All-in launch and replenishment cost per kilogram, including the intended allowances for integration, schedule/risk, and insurance. |
-| $m_{payload}$ | `payload_mass_kg_per_gpu` | Compute-payload mass allocated to each orbital GPU. |
-| $m_{bus}$ | `bus_structure_mass_kg_per_gpu` | Spacecraft bus and structural mass allocated to each GPU. |
-| $m_{shield}$ | `shielding_mass_kg_per_gpu` | Radiation and physical shielding mass allocated to each GPU. |
-| $m_{prop}$ | `propulsion_mass_kg_per_gpu` | Propulsion and propellant mass allocated to each GPU for station keeping and collision avoidance. |
-| $R_{perf}$ | `space_useful_performance_ratio` | Useful workload throughput of one orbital GPU relative to one terrestrial vendor GPU. |
-| $R_{rad}$ | `radiation_redundancy_factor` | Extra fleet multiplier for radiation effects, faults, and redundancy. |
-| $L$ | `space_hardware_lifetime_years` | Assumed orbital hardware service life used by the annual replacement allowance. |
-| $C_Q$ | `qualification_nre` | One-time space-qualification engineering and non-recurring cost. |
-| $c_{platform}$ | `space_platform_cost_per_gpu` | Spacecraft platform hardware cost allocated to each newly launched GPU. |
+| Symbol | Parameter | Default | Definition |
+|---|---|---:|---|
+| $c_L$ | Launch cost | $3,000/kg | All-in launch and replenishment cost per kilogram, including the intended allowances for integration, schedule/risk, and insurance. |
+| $m_{payload}$ | Compute payload mass | 35 kg/GPU | Compute-payload mass allocated to each orbital GPU. |
+| $m_{bus}$ | Bus and structure mass | 18 kg/GPU | Spacecraft bus and structural mass allocated to each GPU. |
+| $m_{shield}$ | Shielding mass | 12 kg/GPU | Radiation and physical shielding mass allocated to each GPU. |
+| $m_{prop}$ | Propulsion mass | 3 kg/GPU | Propulsion and propellant mass allocated to each GPU for station keeping and collision avoidance. |
+| $R_{perf}$ | Space useful performance vs. terrestrial GPU | 0.85× | Useful workload throughput of one orbital GPU relative to one terrestrial vendor GPU. |
+| $R_{rad}$ | Radiation/fault redundancy factor | 1.15× | Extra fleet multiplier for radiation effects, faults, and redundancy. |
+| $L$ | Space hardware lifetime | 5 years | Assumed orbital hardware service life used by the annual replacement allowance. |
+| $C_Q$ | Space qualification NRE | $250M | One-time space-qualification engineering and non-recurring cost. |
+| $c_{platform}$ | Space platform cost | $20,000/GPU | Spacecraft platform hardware cost allocated to each newly launched GPU. |
 
 #### Power and thermal systems
 
-| Symbol | JSON key | Definition |
-|---|---|---|
-| $p_{solar}$ | `solar_specific_power_w_per_kg` | Beginning-of-life solar-array output per kilogram. |
-| $c_{solar}$ | `solar_array_cost_per_w` | Solar-array acquisition cost per watt of rated output. |
-| $d_{solar}$ | `solar_annual_degradation` | Fractional annual degradation in solar output. |
-| $\eta_{point}$ | `solar_pointing_efficiency` | Fraction of rated solar output delivered after pointing losses. |
-| $D_{compute}$ | `compute_duty_cycle` | Fraction of time for which the IT load is assumed to compute and produce heat. |
-| $H_{eclipse}$ | `eclipse_hours_per_day` | Daily hours of battery-supported eclipse operation. |
-| $e_{battery}$ | `battery_specific_energy_wh_per_kg` | Usable battery energy per kilogram. |
-| $c_{battery}$ | `battery_cost_per_kwh` | Battery acquisition cost per kWh of capacity. |
-| $P_{bus}$ | `spacecraft_bus_power_w_per_gpu` | Continuous spacecraft-bus power allocated to each GPU. |
-| $q_{radiator}$ | `thermal_rejection_w_per_m2` | Radiator heat-rejection capability per square meter. |
-| $f_{view}$ | `radiator_view_factor` | Effective radiator view factor used to derate heat rejection. |
-| $m_{radiator}$ | `radiator_mass_kg_per_m2` | Deployed radiator mass per square meter. |
-| $c_{radiator}$ | `radiator_cost_per_m2` | Radiator acquisition cost per square meter. |
+| Symbol | Parameter | Default | Definition |
+|---|---|---:|---|
+| $p_{solar}$ | Solar specific power | 150 W/kg | Beginning-of-life solar-array output per kilogram. |
+| $c_{solar}$ | Solar array cost | $35/W | Solar-array acquisition cost per watt of rated output. |
+| $d_{solar}$ | Solar degradation/year | 2.5% | Fractional annual degradation in solar output. |
+| $\eta_{point}$ | Solar pointing efficiency | 90% | Fraction of rated solar output delivered after pointing losses. |
+| $D_{compute}$ | Compute duty cycle | 85% | Fraction of time for which the IT load is assumed to compute and produce heat. |
+| $H_{eclipse}$ | Eclipse duration | 0 hours/day | Daily hours of battery-supported eclipse operation. |
+| $e_{battery}$ | Battery specific energy | 180 Wh/kg | Usable battery energy per kilogram. |
+| $c_{battery}$ | Battery cost | $1,000/kWh | Battery acquisition cost per kWh of capacity. |
+| $P_{bus}$ | Spacecraft bus power | 100 W/GPU | Continuous spacecraft-bus power allocated to each GPU. |
+| $q_{radiator}$ | Thermal rejection | 350 W/m² | Radiator heat-rejection capability per square meter. |
+| $f_{view}$ | Radiator view factor | 0.8 | Effective radiator view factor used to derate heat rejection. |
+| $m_{radiator}$ | Radiator mass | 7 kg/m² | Deployed radiator mass per square meter. |
+| $c_{radiator}$ | Radiator cost | $10,000/m² | Radiator acquisition cost per square meter. |
 
 #### Communications, operations, and disposal
 
-| Symbol | JSON key | Definition |
-|---|---|---|
-| $V_{data}$ | `data_tb_per_gpu_day` | Daily transferred data volume per orbital GPU. |
-| $e_{transfer}$ | `data_transfer_kwh_per_tb` | Electrical energy required to transfer one TB. |
-| $A_{weather}$ | `weather_availability` | Fraction of time the ground link is available after weather effects. |
-| $C_{ground}$ | `ground_station_capex` | One-time ground-station capital cost. |
-| $c_{link}$ | `inter_node_link_cost_per_gpu` | Inter-node communications hardware cost for each new GPU. |
-| $C_{spectrum}$ | `spectrum_licensing_per_year` | Annual spectrum and licensing expense. |
-| $C_{network}$ | `ground_network_ops_per_year` | Annual ground-network operating expense. |
-| $C_{mission}$ | `mission_control_per_year` | Annual mission-control and staffing expense. |
-| $C_{cyber}$ | `cybersecurity_per_year` | Annual cybersecurity expense. |
-| $C_{telemetry}$ | `telemetry_software_per_year` | Annual autonomy and telemetry software expense. |
-| $c_{ops}$ | `operations_per_spacecraft_year` | Annual per-orbital-GPU operations cost. |
-| $s$ | `spares_servicing_percent` | Spares and servicing allowance as a percentage of new compute and platform acquisition cost. |
-| $c_{EOL}$ | `end_of_life_cost_per_kg` | End-of-life handling and disposal cost per kilogram launched. |
+| Symbol | Parameter | Default | Definition |
+|---|---|---:|---|
+| $V_{data}$ | Data transferred | 0.1 TB/GPU-day | Daily transferred data volume per orbital GPU. |
+| $e_{transfer}$ | Data-transfer energy | 2 kWh/TB | Electrical energy required to transfer one TB. |
+| $A_{weather}$ | Ground-link weather availability | 98% | Fraction of time the ground link is available after weather effects. |
+| $C_{ground}$ | Ground-station CAPEX | $150M | One-time ground-station capital cost. |
+| $c_{link}$ | Inter-node link cost | $2,000/GPU | Inter-node communications hardware cost for each new GPU. |
+| $C_{spectrum}$ | Spectrum licensing | $10M/year | Annual spectrum and licensing expense. |
+| $C_{network}$ | Ground-network operations | $30M/year | Annual ground-network operating expense. |
+| $C_{mission}$ | Mission control | $60M/year | Annual mission-control and staffing expense. |
+| $C_{cyber}$ | Cybersecurity | $20M/year | Annual cybersecurity expense. |
+| $C_{telemetry}$ | Telemetry software | $25M/year | Annual autonomy and telemetry software expense. |
+| $c_{ops}$ | Spacecraft operations | $500/GPU-year | Annual per-orbital-GPU operations cost. |
+| $s$ | Spares and servicing | 5% | Spares and servicing allowance as a percentage of new compute and platform acquisition cost. |
+| $c_{EOL}$ | End-of-life cost | $150/kg | End-of-life handling and disposal cost per kilogram launched. |
 
 Derived quantities used below are:
 
