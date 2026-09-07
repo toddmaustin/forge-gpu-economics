@@ -118,11 +118,16 @@ test("space mass, availability, batteries, and launch costs respond to parameter
   assert.ok(eclipse.space.batteries > 0);
   assert.ok(eclipse.space.launch > base.space.launch);
   assert.ok(base.yearly[0].requiredGPUs > base.yearly[0].workloadGPUs);
+  assert.equal(base.yearly[0].solarMassKg, base.yearly[0].solarAreaM2 * spaceDefaults.solar_mass_kg_per_m2);
+  const heavierSolar = computeSpaceTCO({ ...spaceDefaults, solar_mass_kg_per_m2: 4 });
+  assert.equal(heavierSolar.yearly[0].solarAreaM2, base.yearly[0].solarAreaM2);
+  assert.ok(heavierSolar.yearly[0].solarMassKg > base.yearly[0].solarMassKg);
+  assert.ok(heavierSolar.space.launch > base.space.launch);
 });
 
 test("space input validation and sensitivity are usable", () => {
   assert.throws(() => normalizeSpaceInputs({ ...spaceDefaults, weather_availability: 1.1 }), /no more than 100%/);
   const results = spaceSensitivity(spaceDefaults);
-  assert.equal(results.length, 13);
+  assert.equal(results.length, 14);
   assert.ok(results.every(result => Number.isFinite(result.delta)));
 });
