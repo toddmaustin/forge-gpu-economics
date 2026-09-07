@@ -348,7 +348,7 @@ The terrestrial workload and hardware variables retain the definitions in the ea
 
 | Symbol | Parameter | Default | Definition |
 |---|---|---:|---|
-| $c_L$ | Launch cost | $3,000/kg | All-in launch and replenishment cost per kilogram, including the intended allowances for integration, schedule/risk, and insurance. |
+| $c_L$ | Launch cost | $200/kg | Mature, dedicated heavy-lift launch to dawn-dusk sun-synchronous LEO, including the intended allowances for integration, schedule/risk, insurance, and replenishment. |
 | $m_{payload}$ | Compute payload mass | 35 kg/GPU | Compute-payload mass allocated to each orbital GPU. |
 | $m_{bus}$ | Bus and structure mass | 18 kg/GPU | Spacecraft bus and structural mass allocated to each GPU. |
 | $m_{shield}$ | Shielding mass | 12 kg/GPU | Radiation and physical shielding mass allocated to each GPU. |
@@ -452,6 +452,10 @@ Solar-array cost is charged on the rated output needed before pointing losses:
 
 $$C_{solar}(t)=\Delta N_S(t)A_{solar}(t)(1000q_{solar})c_{solar}$$
 
+The 0.3 kW/m² default is 300 W/m² of beginning-of-life rated electrical output, not 0.3 W/m². It is a plausible array-level round number near Earth: incident solar flux is approximately 1,361 W/m², and 300 W/m² corresponds to about 22% net conversion after cell efficiency, packing, wiring, temperature, mismatch, and structural losses. It is also internally consistent with the retained legacy defaults because 300 W/m² divided by 2 kg/m² is 150 W/kg. Pointing efficiency and annual degradation are applied separately, so effective first-year output at the default 90% pointing efficiency is 270 W/m².
+
+The model assumes that solar arrays reject their own unconverted absorbed solar energy from their panel surfaces; it does not route all array waste heat through the compute radiators. Power-conditioning, cable, and other conversion losses are not separately modeled. A detailed design should verify array equilibrium temperature and add any losses conducted into the spacecraft thermal loop.
+
 Battery energy, mass, and cost are:
 
 $$E_{battery}=P_{avg}H_{eclipse}$$
@@ -472,6 +476,12 @@ $$m_{radiator,total}=A_{radiator}\mu_{radiator}$$
 
 $$C_{thermal}(t)=\Delta N_S(t)A_{radiator}c_{radiator}$$
 
+The 0.35 kW/m² default is 350 W/m² of gross thermal emission. By the Stefan-Boltzmann relation, $q=\epsilon\sigma T^4$, this is approximately the ideal blackbody flux at 280 K; an emissivity below one would require a higher radiator temperature to produce the same gross flux. The separate 0.8 view factor represents geometric obstruction and imperfect exposure to cold space, reducing modeled useful rejection to 280 W/m². At that effective rate, each continuous kilowatt of modeled heat requires about 3.57 m² of radiator and, at 7 kg/m², 25 kg of radiator mass.
+
+The view factor is not a calculation of absorbed sunlight. The baseline assumes that attitude, placement, or sunshields keep the compute housings and radiators out of direct sunlight even though the solar arrays remain illuminated, and that the arrays reject their own waste heat locally. If a radiator or housing is sunlit, absorbed solar heat should be modeled separately using surface solar absorptivity, incident flux, and projected area; it can be comparable to the nominal rejection rate and materially increase required radiator area.
+
+The present first-order radiator equation includes only duty-cycled IT power. It omits spacecraft-bus and power-conversion heat, the dissipated portion of communications power, absorbed solar and albedo loads, Earth infrared radiation, detailed surface emissivity and temperature, and thermal transients. These omissions are acceptable only as an explicitly shaded, first-pass economic scenario. Mission-level sizing should use a complete steady-state and transient thermal balance.
+
 ### Launch mass and cost
 
 Per-GPU launched dry mass includes compute payload, bus/structure, shielding, propulsion, solar array, battery, and radiator mass:
@@ -485,6 +495,12 @@ $$C_{launch}(t)=\Delta N_S(t)m_{dry}(t)c_L$$
 $$C_{EOL}(t)=\Delta N_S(t)m_{dry}(t)c_{EOL}$$
 
 The launch-rate input is intended to represent all-in vehicle, integration, schedule/risk, insurance, and replenishment economics rather than only an advertised vehicle price.
+
+The $200/kg baseline is a forward-looking mature-launch scenario for a very large space data center using dedicated, high-cadence, fully reusable heavy-lift vehicles. It is not current market pricing. Current small-payload SSO rideshare pricing is roughly $7,000/kg, a current reusable Falcon-class benchmark is roughly $3,600/kg, and the best historical bulk Falcon Heavy LEO economics are roughly $1,800/kg. The baseline instead follows the mid-2030s scale assumed in Google's Project Suncatcher analysis, which identifies approximately $200/kg as plausible if launch volume and reuse increase dramatically. More aggressive estimates of roughly $60/kg with about 10-fold component reuse, below $15/kg with about 100-fold reuse, and an approximately $8/kg propellant floor are projected internal costs rather than achieved customer prices. A provider may charge $200--$300/kg even if its internal cost is substantially lower.
+
+A dawn-dusk sun-synchronous orbit is still low Earth orbit. A vehicle launched directly onto the appropriate near-polar trajectory avoids the prohibitive plane change that would follow an equatorial insertion. A purpose-built, high-volume launch system is therefore assumed to incur only an approximately 0--20% SSO increment over its ordinary LEO economics, rather than a multiple of the LEO price. This assumption requires a compatible launch site and trajectory; the relevant orbit is approximately 500--800 km altitude and 97--99 degrees inclination.
+
+Recommended launch-cost cases for sensitivity analysis are $500/kg conservative, $200/kg baseline, and $100/kg optimistic, with $50/kg reserved as a technology-limit case. At the baseline, a 100-tonne payload costs $20 million to launch; the same $20 million mission carrying 200 tonnes would reach $100/kg. These economics depend on large dedicated payloads, rapid complete reuse, and very high flight cadence, and remain unproven. Launch cost should therefore be treated as one of the space model's most important sensitivity inputs rather than as a forecast.
 
 ### Space cost ledger
 
