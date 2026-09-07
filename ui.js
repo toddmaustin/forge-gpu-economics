@@ -1,8 +1,9 @@
-import { computeTCO, breakEvenFleet, sensitivity } from "./model.js?v=1.3.0";
-import { DEFAULT_MODEL_ID, FORGE_MODELS, getForgeModel } from "./forge-models.js?v=1.3.0";
-import { computeSpaceTCO, spaceSensitivity } from "./space-model.js?v=1.3.0";
+import { computeTCO, breakEvenFleet, sensitivity } from "./model.js?v=1.3.1";
+import { DEFAULT_MODEL_ID, FORGE_MODELS, getForgeModel } from "./forge-models.js?v=1.3.1";
+import { inputPresentation, valueFromInput } from "./input-units.js?v=1.3.1";
+import { computeSpaceTCO, spaceSensitivity } from "./space-model.js?v=1.3.1";
 
-const ASSET_VERSION = "1.3.0";
+const ASSET_VERSION = "1.3.1";
 
 const $ = s => document.querySelector(s);
 const money = x => {
@@ -146,7 +147,7 @@ function displayValue(v, kind) {
   return v;
 }
 function readValue(input) {
-  let v = Number(input.value);
+  let v = valueFromInput(input.value, input.dataset.scale);
   if (input.dataset.kind === "percent") v /= 100;
   return v;
 }
@@ -162,9 +163,10 @@ function buildControls() {
     for (const [key, label, kind, step] of fields) {
       const wrap = document.createElement("label");
       wrap.className = "control";
-      const suffix = kind === "percent" || kind === "percentage" ? " (%)" : kind === "years" ? " (years)" : kind === "ratio" ? " (×)" : "";
+      const presentation = inputPresentation(defaults[key], step);
+      const unitSuffix = kind === "percent" || kind === "percentage" ? " (%)" : kind === "years" ? " (years)" : kind === "ratio" ? " (×)" : "";
       const bounds = kind === "percentage" ? ' min="0" max="100"' : "";
-      wrap.innerHTML = `<span>${label}${suffix}</span><input data-key="${key}" data-kind="${kind}" type="number" step="${step}"${bounds} value="${displayValue(defaults[key], kind)}">`;
+      wrap.innerHTML = `<span>${label}${unitSuffix}${presentation.suffix}</span><input data-key="${key}" data-kind="${kind}" data-scale="${presentation.scale}" type="number" step="${presentation.step}"${bounds} value="${displayValue(presentation.value, kind)}">`;
       grid.appendChild(wrap);
     }
     root.appendChild(section);
