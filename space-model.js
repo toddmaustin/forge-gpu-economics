@@ -72,6 +72,11 @@ export function computeSpaceTCO(raw) {
     const radiatorOutputWPerM2 = x.radiator_thermal_radiation_kw_per_m2 * 1000 * x.radiator_view_factor;
     const radiatorAreaM2 = itPowerW * x.compute_duty_cycle / radiatorOutputWPerM2;
     const radiatorMassKg = radiatorAreaM2 * x.radiator_mass_kg_per_m2;
+    const totalITPowerW = requiredGPUs * itPowerW;
+    const totalSolarPowerW = requiredGPUs * solarAreaM2 * solarOutputWPerM2;
+    const totalSolarAreaKm2 = requiredGPUs * solarAreaM2 / 1e6;
+    const totalHeatRadiationW = requiredGPUs * radiatorAreaM2 * radiatorOutputWPerM2;
+    const totalRadiatorAreaKm2 = requiredGPUs * radiatorAreaM2 / 1e6;
     const dryMassKg = x.payload_mass_kg_per_gpu + x.bus_structure_mass_kg_per_gpu + x.shielding_mass_kg_per_gpu +
       x.propulsion_mass_kg_per_gpu + solarMassKg + batteryMassKg + radiatorMassKg;
     const gpuPrice = x.vendor_gpu_price * (1 + x.vendor_gpu_price_growth) ** t;
@@ -88,7 +93,11 @@ export function computeSpaceTCO(raw) {
     space.missionOperations += x.mission_control_per_year + x.cybersecurity_per_year + x.telemetry_software_per_year + requiredGPUs * x.operations_per_spacecraft_year;
     space.sparesServicing += (hardwareCost + platformCost) * x.spares_servicing_percent / 100;
     space.endOfLife += newUnits * dryMassKg * x.end_of_life_cost_per_kg;
-    yearly.push({ year: t + 1, workloadGPUs, requiredGPUs, newUnits, replacementUnits, itPowerW, averagePowerW, solarAreaM2, solarMassKg, batteryMassKg, radiatorAreaM2, radiatorMassKg, dryMassKg });
+    yearly.push({
+      year: t + 1, workloadGPUs, requiredGPUs, newUnits, replacementUnits, itPowerW, averagePowerW,
+      solarAreaM2, solarMassKg, batteryMassKg, radiatorAreaM2, radiatorMassKg, dryMassKg,
+      totalITPowerW, totalSolarPowerW, totalSolarAreaKm2, totalHeatRadiationW, totalRadiatorAreaKm2
+    });
     priorRequired = requiredGPUs;
   }
 
