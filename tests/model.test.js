@@ -4,6 +4,7 @@ import fs from "node:fs";
 import { computeTCO, grossDiesPerWafer, breakEvenFleet, normalizeInputs, sensitivity } from "../model.js";
 import { FORGE_MODELS, SPACE_MODEL_CONSIDERATIONS, getForgeModel } from "../forge-models.js";
 import { computeSpaceTCO, normalizeSpaceInputs, spaceSensitivity } from "../space-model.js";
+import { inputPresentation, usesMillions, valueFromInput } from "../input-units.js";
 
 const defaults = JSON.parse(fs.readFileSync(new URL("../defaults.json", import.meta.url), "utf8"));
 const spaceDefaults = JSON.parse(fs.readFileSync(new URL("../space-defaults.json", import.meta.url), "utf8"));
@@ -69,11 +70,26 @@ test("browser entry points cache-bust the current assets", () => {
   const index = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
   const ui = fs.readFileSync(new URL("../ui.js", import.meta.url), "utf8");
 
-  assert.match(index, /styles\.css\?v=1\.3\.0/);
-  assert.match(index, /ui\.js\?v=1\.3\.0/);
-  assert.match(ui, /model\.js\?v=1\.3\.0/);
-  assert.match(ui, /forge-models\.js\?v=1\.3\.0/);
+  assert.match(index, /styles\.css\?v=1\.3\.1/);
+  assert.match(index, /ui\.js\?v=1\.3\.1/);
+  assert.match(ui, /model\.js\?v=1\.3\.1/);
+  assert.match(ui, /forge-models\.js\?v=1\.3\.1/);
+  assert.match(ui, /input-units\.js\?v=1\.3\.1/);
   assert.match(ui, /\$\{file\}\?v=\$\{ASSET_VERSION\}/);
+});
+
+test("defaults ending in at least six zeros use editable millions", () => {
+  assert.equal(usesMillions(6_000_000), true);
+  assert.equal(usesMillions(6_825_000), false);
+  assert.equal(usesMillions(0), false);
+  assert.deepEqual(inputPresentation(6_000_000, 1_000_000), {
+    value: 6,
+    step: "any",
+    scale: 1_000_000,
+    suffix: " (millions)"
+  });
+  assert.equal(valueFromInput("6.825", 1_000_000), 6_825_000);
+  assert.deepEqual(inputPresentation(35_000, 1_000), { value: 35_000, step: 1_000, scale: 1, suffix: "" });
 });
 
 test("model catalog exposes both comparisons and a useful space checklist", () => {
