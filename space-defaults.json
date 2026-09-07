@@ -40,7 +40,7 @@
   "facility_cost_per_deployed_device": 3000,
   "power_cooling_capacity_per_it_kw_year": 900,
   "vendor_software_support_per_gpu_year": 500,
-  "launch_cost_per_kg": 3000,
+  "launch_cost_per_kg": 200,
   "payload_mass_kg_per_gpu": 35,
   "bus_structure_mass_kg_per_gpu": 18,
   "shielding_mass_kg_per_gpu": 12,
