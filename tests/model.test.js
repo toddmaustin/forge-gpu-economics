@@ -134,6 +134,12 @@ test("space mass, availability, batteries, and launch costs respond to parameter
   assert.ok(eclipse.space.batteries > 0);
   assert.ok(eclipse.space.launch > base.space.launch);
   assert.ok(base.yearly[0].requiredGPUs > base.yearly[0].workloadGPUs);
+  const year = base.yearly[0];
+  assert.equal(year.totalITPowerW, year.requiredGPUs * year.itPowerW);
+  assert.equal(year.totalSolarPowerW, year.requiredGPUs * year.averagePowerW);
+  assert.equal(year.totalSolarAreaKm2, year.requiredGPUs * year.solarAreaM2 / 1e6);
+  assert.equal(year.totalHeatRadiationW, year.requiredGPUs * year.itPowerW * spaceDefaults.compute_duty_cycle);
+  assert.equal(year.totalRadiatorAreaKm2, year.requiredGPUs * year.radiatorAreaM2 / 1e6);
   assert.equal(base.yearly[0].solarMassKg, base.yearly[0].solarAreaM2 * spaceDefaults.solar_mass_kg_per_m2);
   const heavierSolar = computeSpaceTCO({ ...spaceDefaults, solar_mass_kg_per_m2: 4 });
   assert.equal(heavierSolar.yearly[0].solarAreaM2, base.yearly[0].solarAreaM2);
