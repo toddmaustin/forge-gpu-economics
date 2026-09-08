@@ -37,6 +37,7 @@ export function normalizeSpaceInputs(raw) {
   for (const key of ["demand_growth", "solar_annual_degradation", "compute_duty_cycle", "solar_pointing_efficiency", "weather_availability"]) {
     if (x[key] > 1) throw new Error(`${key} must be no more than 100%.`);
   }
+  if (x.eclipse_hours_per_day >= 24) throw new Error("eclipse_hours_per_day must be less than 24 hours.");
   return x;
 }
 
@@ -65,7 +66,9 @@ export function computeSpaceTCO(raw) {
     const averagePowerW = itPowerW * x.compute_duty_cycle + x.spacecraft_bus_power_w_per_gpu + transferPowerW;
     const solarOutputWPerM2 = x.solar_power_density_kw_per_m2 * 1000 * x.solar_pointing_efficiency *
       (1 - x.solar_annual_degradation) ** t;
-    const solarAreaM2 = averagePowerW / solarOutputWPerM2;
+    const sunlightFraction = (24 - x.eclipse_hours_per_day) / 24;
+    const requiredSunlightPowerW = averagePowerW / sunlightFraction;
+    const solarAreaM2 = requiredSunlightPowerW / solarOutputWPerM2;
     const solarMassKg = solarAreaM2 * x.solar_mass_kg_per_m2;
     const batteryEnergyWh = averagePowerW * x.eclipse_hours_per_day;
     const batteryMassKg = batteryEnergyWh / x.battery_specific_energy_wh_per_kg;
@@ -96,7 +99,7 @@ export function computeSpaceTCO(raw) {
     space.endOfLife += newUnits * dryMassKg * x.end_of_life_cost_per_kg;
     yearly.push({
       year: t + 1, workloadGPUs, requiredGPUs, newUnits, replacementUnits, itPowerW, averagePowerW,
-      solarAreaM2, solarMassKg, batteryMassKg, radiatorAreaM2, radiatorMassKg, dryMassKg,
+      sunlightFraction, requiredSunlightPowerW, solarAreaM2, solarMassKg, batteryMassKg, radiatorAreaM2, radiatorMassKg, dryMassKg,
       totalLaunchMassKg, totalITPowerW, totalSolarPowerW, totalSolarAreaKm2, totalHeatRadiationW, totalRadiatorAreaKm2
     });
     priorRequired = requiredGPUs;
