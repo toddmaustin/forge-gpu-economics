@@ -368,7 +368,6 @@ The terrestrial workload and hardware variables retain the definitions in the ea
 | $c_{solar}$ | Solar array cost | $35/W | Solar-array acquisition cost per watt of rated output. |
 | $d_{solar}$ | Solar degradation/year | 2.5% | Fractional annual degradation in solar output. |
 | $\eta_{point}$ | Solar pointing efficiency | 90% | Fraction of rated solar output delivered after pointing losses. |
-| $D_{compute}$ | Compute duty cycle | 90% | Fraction of time for which the IT load is assumed to compute and produce heat. |
 | $H_{eclipse}$ | Eclipse duration | 0 hours/day | Daily hours of battery-supported eclipse operation. |
 | $e_{battery}$ | Battery specific energy | 180 Wh/kg | Usable battery energy per kilogram. |
 | $c_{battery}$ | Battery cost | $1,000/kWh | Battery acquisition cost per kWh of capacity. |
@@ -406,9 +405,9 @@ Derived quantities used below are:
 |---|---|
 | $N_S(t)$ | Orbital GPUs required in year $t$. |
 | $\Delta N_S(t)$ | New orbital GPUs acquired and launched in year $t$, including replacements. |
-| $P_{IT}$ | Per-GPU IT power before applying compute duty cycle. |
+| $P_{IT}$ | Per-GPU peak IT power, assumed continuously active for power and thermal sizing. |
 | $P_{transfer}$ | Average per-GPU data-transfer power. |
-| $P_{avg}$ | Average per-GPU orbital electrical load. |
+| $P_{load}$ | Average per-GPU orbital electrical load. |
 | $A_{solar}(t)$, $m_{solar}(t)$ | Solar-array area and mass per new GPU in year $t$. |
 | $E_{battery}(t)$, $m_{battery}(t)$ | Required battery energy and mass per new GPU. |
 | $A_{radiator}$ | Radiator area per new GPU. |
@@ -416,9 +415,9 @@ Derived quantities used below are:
 
 ### Workload-equivalent orbital fleet
 
-The model converts terrestrial GPU-equivalent demand into an orbital fleet using useful performance, compute duty cycle, ground-link weather availability, and radiation/fault redundancy:
+The model converts terrestrial GPU-equivalent demand into an orbital fleet using useful performance, ground-link weather availability, and radiation/fault redundancy. Compute is assumed to run continuously at peak load:
 
-$$N_S(t)=\frac{N_V(t)R_{rad}}{R_{perf}D_{compute}A_{weather}}$$
+$$N_S(t)=\frac{N_V(t)R_{rad}}{R_{perf}A_{weather}}$$
 
 #### Distinguishing useful performance from radiation redundancy
 
@@ -428,7 +427,7 @@ $R_{rad}$ instead describes **additional deployed fleet capacity**. The default 
 
 The two parameters therefore represent different consequences even though both increase the fleet in the equation above: useful-performance losses reduce productive work per available GPU and appear in the denominator, whereas redundancy adds standby or substitute capacity and appears in the numerator. To avoid double counting, temporary or permanent device unavailability covered by spare capacity should be assigned to $R_{rad}$, while recurring per-device processing overhead should be assigned to $R_{perf}$. Radiation effects should affect both only when independently justified—for example, error-checking overhead may reduce useful performance while separate spare hardware covers devices taken offline. Radiation-driven early retirement belongs in the hardware-lifetime assumption rather than either factor.
 
-If an orbital GPU is expected to match terrestrial useful throughput whenever it is operating, $R_{perf}$ should be set to 1.0 and any additional fault-tolerance capacity should be represented by $R_{rad}$. Compute scheduling gaps belong to $D_{compute}$, and ground-link outages belong to $A_{weather}$.
+If an orbital GPU is expected to match terrestrial useful throughput, $R_{perf}$ should be set to 1.0 and any additional fault-tolerance capacity should be represented by $R_{rad}$. The model does not apply a compute scheduling or utilization derating; ground-link outages belong to $A_{weather}$.
 
 New hardware covers both demand growth and a first-order annual replacement allowance:
 
@@ -454,9 +453,9 @@ Average data-transfer power is:
 
 $$P_{transfer}=\frac{V_{data}e_{transfer}(1000)}{24}$$
 
-where the factor of 1000 converts kW to W. Average orbital load applies the compute duty cycle to IT power but treats bus and transfer power as continuous:
+where the factor of 1000 converts kW to W. Orbital electrical load assumes continuous peak IT power and adds continuous bus power and average data-transfer power:
 
-$$P_{avg}=P_{IT}D_{compute}+P_{bus}+P_{transfer}$$
+$$P_{load}=P_{IT}+P_{bus}+P_{transfer}$$
 
 ### Solar arrays and batteries
 
@@ -464,7 +463,7 @@ The fraction of each day in sunlight and the solar power required while illumina
 
 $$f_{sun}=\frac{24-H_{eclipse}}{24}$$
 
-$$P_{sun}=\frac{P_{avg}}{f_{sun}}$$
+$$P_{sun}=\frac{P_{load}}{f_{sun}}$$
 
 Thus the arrays supply the live spacecraft load and replenish the eclipse energy while sunlight is available. Solar-panel area is derived from this required sunlight power, power density, pointing efficiency, and annual degradation (the factor of 1000 converts kW to W). Panel mass is then derived from its area and areal mass density:
 
@@ -482,7 +481,7 @@ The model assumes that solar arrays reject their own unconverted absorbed solar 
 
 Battery energy, mass, and cost are:
 
-$$E_{battery}=P_{avg}H_{eclipse}$$
+$$E_{battery}=P_{load}H_{eclipse}$$
 
 $$m_{battery}=\frac{E_{battery}}{e_{battery}}$$
 
@@ -492,9 +491,9 @@ The illustrative sun-synchronous default assumes continuous sunlight and sets ec
 
 ### Radiative thermal system
 
-With no convective cooling, radiator-panel area is derived first from duty-cycled IT heat, thermal radiation, and view factor (the factor of 1000 converts kW to W). Panel mass is then derived from that area and its areal mass:
+With no convective cooling, radiator-panel area is derived first from continuous peak IT heat, thermal radiation, and view factor (the factor of 1000 converts kW to W). Panel mass is then derived from that area and its areal mass:
 
-$$A_{radiator}=\frac{P_{IT}D_{compute}}{1000q_{radiator}f_{view}}$$
+$$A_{radiator}=\frac{P_{IT}}{1000q_{radiator}f_{view}}$$
 
 $$m_{radiator,total}=A_{radiator}\mu_{radiator}$$
 
@@ -504,9 +503,9 @@ The 0.35 kW/m² default is 350 W/m² of gross thermal emission. By the Stefan-Bo
 
 The view factor is not a calculation of absorbed sunlight. The baseline assumes that attitude, placement, or sunshields keep the compute housings and radiators out of direct sunlight even though the solar arrays remain illuminated, and that the arrays reject their own waste heat locally. If a radiator or housing is sunlit, absorbed solar heat should be modeled separately using surface solar absorptivity, incident flux, and projected area; it can be comparable to the nominal rejection rate and materially increase required radiator area.
 
-The present first-order radiator equation includes only duty-cycled IT power. It omits spacecraft-bus and power-conversion heat, the dissipated portion of communications power, absorbed solar and albedo loads, Earth infrared radiation, detailed surface emissivity and temperature, and thermal transients. These omissions are acceptable only as an explicitly shaded, first-pass economic scenario. Mission-level sizing should use a complete steady-state and transient thermal balance.
+The present first-order radiator equation includes only continuous peak IT power. It omits spacecraft-bus and power-conversion heat, the dissipated portion of communications power, absorbed solar and albedo loads, Earth infrared radiation, detailed surface emissivity and temperature, and thermal transients. These omissions are acceptable only as an explicitly shaded, first-pass economic scenario. Mission-level sizing should use a complete steady-state and transient thermal balance.
 
-The Fleet & hardware summary scales the per-GPU results by the required orbital fleet. It reports total launch mass, total IT power at nameplate load, effective solar generation after pointing and degradation losses, and duty-cycled IT heat rejection. Total solar-panel and radiator areas are converted from square meters to square kilometers.
+The Fleet & hardware summary scales the per-GPU results by the required orbital fleet. It reports total launch mass, continuous peak IT power, effective solar generation after pointing and degradation losses, and peak IT heat rejection. Total solar-panel and radiator areas are converted from square meters to square kilometers.
 
 ### Launch mass and cost
 
@@ -608,8 +607,8 @@ where $s$ is entered as a percentage and converted to a fraction by the implemen
 
 ### Space sensitivity analysis
 
-The space view applies the same +20% one-at-a-time method to selected orbital inputs, then ranks them by the absolute change in $A_S$. The tested inputs cover launch cost, payload mass, useful performance, radiation redundancy, hardware lifetime, solar performance and degradation, compute duty cycle, radiator mass, weather availability, data volume, mission control, and spares/servicing. Inputs representing bounded fractions are capped at 100% where applicable.
+The space view applies the same +20% one-at-a-time method to selected orbital inputs, then ranks them by the absolute change in $A_S$. The tested inputs cover launch cost, payload mass, useful performance, radiation redundancy, hardware lifetime, solar performance and degradation, radiator mass, weather availability, data volume, mission control, and spares/servicing. Inputs representing bounded fractions are capped at 100% where applicable.
 
 ### Space-model limitations
 
-The orbital relationships omit launch batching, vehicle payload constraints, detailed orbital mechanics, financing/discounting, revenue, latency valuation, communications and spectrum throughput constraints, detailed radiation degradation, thermal transients, attitude constraints, discrete unit counts, and correlated failures. The redundancy factor, duty cycle, weather availability, and lifetime allowance are simplified proxies rather than availability or reliability simulations. The model is therefore suitable for first-pass scenario and sensitivity exploration, not mission design, a price quote, or a forecast.
+The orbital relationships omit launch batching, vehicle payload constraints, detailed orbital mechanics, financing/discounting, revenue, latency valuation, communications and spectrum throughput constraints, detailed radiation degradation, thermal transients, attitude constraints, discrete unit counts, and correlated failures. The model assumes continuous peak compute rather than modeling utilization or scheduling; the redundancy factor, weather availability, and lifetime allowance are simplified proxies rather than availability or reliability simulations. The model is therefore suitable for first-pass scenario and sensitivity exploration, not mission design, a price quote, or a forecast.

@@ -11,7 +11,6 @@ export const SPACE_SENSITIVITY_FIELDS = [
   ["solar_power_density_kw_per_m2", "Solar power density"],
   ["solar_mass_kg_per_m2", "Solar areal mass"],
   ["solar_annual_degradation", "Solar degradation"],
-  ["compute_duty_cycle", "Compute duty cycle"],
   ["radiator_thermal_radiation_kw_per_m2", "Radiator thermal radiation"],
   ["radiator_mass_kg_per_m2", "Radiator mass"],
   ["weather_availability", "Link weather availability"],
@@ -30,11 +29,11 @@ export function normalizeSpaceInputs(raw) {
   const x = { ...raw };
   Object.keys(x).filter(key => typeof x[key] === "number").forEach(key => { x[key] = finite(x, key); });
   for (const key of ["fleet_year1", "horizon_years", "space_useful_performance_ratio", "space_hardware_lifetime_years",
-    "solar_power_density_kw_per_m2", "solar_mass_kg_per_m2", "solar_pointing_efficiency", "compute_duty_cycle", "radiator_thermal_radiation_kw_per_m2",
+    "solar_power_density_kw_per_m2", "solar_mass_kg_per_m2", "solar_pointing_efficiency", "radiator_thermal_radiation_kw_per_m2",
     "radiator_view_factor", "battery_specific_energy_wh_per_kg", "weather_availability"]) {
     if (!(x[key] > 0)) throw new Error(`${key} must be positive.`);
   }
-  for (const key of ["demand_growth", "solar_annual_degradation", "compute_duty_cycle", "solar_pointing_efficiency", "weather_availability"]) {
+  for (const key of ["demand_growth", "solar_annual_degradation", "solar_pointing_efficiency", "weather_availability"]) {
     if (x[key] > 1) throw new Error(`${key} must be no more than 100%.`);
   }
   if (x.eclipse_hours_per_day >= 24) throw new Error("eclipse_hours_per_day must be less than 24 hours.");
@@ -56,14 +55,14 @@ export function computeSpaceTCO(raw) {
 
   for (let t = 0; t < Math.max(1, Math.round(x.horizon_years)); t++) {
     const workloadGPUs = x.fleet_year1 * (1 + x.demand_growth) ** t;
-    const effectiveFraction = x.space_useful_performance_ratio * x.compute_duty_cycle * x.weather_availability;
+    const effectiveFraction = x.space_useful_performance_ratio * x.weather_availability;
     const requiredGPUs = workloadGPUs * x.radiation_redundancy_factor / effectiveFraction;
     const growthUnits = Math.max(0, requiredGPUs - priorRequired);
     const replacementUnits = t === 0 ? 0 : priorRequired / x.space_hardware_lifetime_years;
     const newUnits = growthUnits + replacementUnits;
     const itPowerW = x.vendor_logic_power_w + x.vendor_hbm_stacks * x.hbm_power_w_per_stack + x.host_network_power_w_per_device;
     const transferPowerW = x.data_tb_per_gpu_day * x.data_transfer_kwh_per_tb * 1000 / 24;
-    const averagePowerW = itPowerW * x.compute_duty_cycle + x.spacecraft_bus_power_w_per_gpu + transferPowerW;
+    const averagePowerW = itPowerW + x.spacecraft_bus_power_w_per_gpu + transferPowerW;
     const solarOutputWPerM2 = x.solar_power_density_kw_per_m2 * 1000 * x.solar_pointing_efficiency *
       (1 - x.solar_annual_degradation) ** t;
     const sunlightFraction = (24 - x.eclipse_hours_per_day) / 24;
@@ -73,9 +72,9 @@ export function computeSpaceTCO(raw) {
     const batteryEnergyWh = averagePowerW * x.eclipse_hours_per_day;
     const batteryMassKg = batteryEnergyWh / x.battery_specific_energy_wh_per_kg;
     const radiatorOutputWPerM2 = x.radiator_thermal_radiation_kw_per_m2 * 1000 * x.radiator_view_factor;
-    const radiatorAreaM2 = itPowerW * x.compute_duty_cycle / radiatorOutputWPerM2;
+    const radiatorAreaM2 = itPowerW / radiatorOutputWPerM2;
     const radiatorMassKg = radiatorAreaM2 * x.radiator_mass_kg_per_m2;
-    const totalITPowerW = requiredGPUs * itPowerW * x.compute_duty_cycle;
+    const totalITPowerW = requiredGPUs * itPowerW;
     const totalSolarPowerW = requiredGPUs * solarAreaM2 * solarOutputWPerM2;
     const totalSolarAreaKm2 = requiredGPUs * solarAreaM2 / 1e6;
     const totalHeatRadiationW = requiredGPUs * radiatorAreaM2 * radiatorOutputWPerM2;
@@ -121,7 +120,7 @@ export function computeSpaceTCO(raw) {
 export function spaceSensitivity(raw, fraction = 0.20) {
   const base = computeSpaceTCO(raw).spaceAdvantage;
   return SPACE_SENSITIVITY_FIELDS.map(([key, label]) => {
-    const upperBound = ["compute_duty_cycle", "weather_availability", "solar_annual_degradation"].includes(key) ? 1 : Infinity;
+    const upperBound = ["weather_availability", "solar_annual_degradation"].includes(key) ? 1 : Infinity;
     const perturbed = { ...raw, [key]: Math.min(raw[key] * (1 + fraction), upperBound) };
     const advantage = computeSpaceTCO(perturbed).spaceAdvantage;
     return { key, label, advantage, delta: advantage - base };
