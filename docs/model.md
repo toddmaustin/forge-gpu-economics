@@ -500,7 +500,7 @@ The view factor is not a calculation of absorbed sunlight. The baseline assumes 
 
 The present first-order radiator equation includes only duty-cycled IT power. It omits spacecraft-bus and power-conversion heat, the dissipated portion of communications power, absorbed solar and albedo loads, Earth infrared radiation, detailed surface emissivity and temperature, and thermal transients. These omissions are acceptable only as an explicitly shaded, first-pass economic scenario. Mission-level sizing should use a complete steady-state and transient thermal balance.
 
-The Fleet & hardware summary scales the per-GPU results by the required orbital fleet. It reports total IT power at nameplate load, effective solar generation after pointing and degradation losses, and duty-cycled IT heat rejection. Total solar-panel and radiator areas are converted from square meters to square kilometers.
+The Fleet & hardware summary scales the per-GPU results by the required orbital fleet. It reports total launch mass, total IT power at nameplate load, effective solar generation after pointing and degradation losses, and duty-cycled IT heat rejection. Total solar-panel and radiator areas are converted from square meters to square kilometers.
 
 ### Launch mass and cost
 

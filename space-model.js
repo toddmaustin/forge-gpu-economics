@@ -79,6 +79,7 @@ export function computeSpaceTCO(raw) {
     const totalRadiatorAreaKm2 = requiredGPUs * radiatorAreaM2 / 1e6;
     const dryMassKg = x.payload_mass_kg_per_gpu + x.bus_structure_mass_kg_per_gpu + x.shielding_mass_kg_per_gpu +
       x.propulsion_mass_kg_per_gpu + solarMassKg + batteryMassKg + radiatorMassKg;
+    const totalLaunchMassKg = requiredGPUs * dryMassKg;
     const gpuPrice = x.vendor_gpu_price * (1 + x.vendor_gpu_price_growth) ** t;
     const hardwareCost = newUnits * gpuPrice;
     const platformCost = newUnits * x.space_platform_cost_per_gpu;
@@ -96,7 +97,7 @@ export function computeSpaceTCO(raw) {
     yearly.push({
       year: t + 1, workloadGPUs, requiredGPUs, newUnits, replacementUnits, itPowerW, averagePowerW,
       solarAreaM2, solarMassKg, batteryMassKg, radiatorAreaM2, radiatorMassKg, dryMassKg,
-      totalITPowerW, totalSolarPowerW, totalSolarAreaKm2, totalHeatRadiationW, totalRadiatorAreaKm2
+      totalLaunchMassKg, totalITPowerW, totalSolarPowerW, totalSolarAreaKm2, totalHeatRadiationW, totalRadiatorAreaKm2
     });
     priorRequired = requiredGPUs;
   }

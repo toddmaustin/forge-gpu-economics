@@ -70,13 +70,14 @@ test("browser entry points cache-bust the current assets", () => {
   const index = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
   const ui = fs.readFileSync(new URL("../ui.js", import.meta.url), "utf8");
 
-  assert.match(index, /styles\.css\?v=1\.5\.0/);
-  assert.match(index, /ui\.js\?v=1\.5\.0/);
-  assert.match(ui, /model\.js\?v=1\.5\.0/);
-  assert.match(ui, /forge-models\.js\?v=1\.5\.0/);
-  assert.match(ui, /input-units\.js\?v=1\.5\.0/);
-  assert.match(ui, /space-model\.js\?v=1\.5\.0/);
+  assert.match(index, /styles\.css\?v=1\.5\.1/);
+  assert.match(index, /ui\.js\?v=1\.5\.1/);
+  assert.match(ui, /model\.js\?v=1\.5\.1/);
+  assert.match(ui, /forge-models\.js\?v=1\.5\.1/);
+  assert.match(ui, /input-units\.js\?v=1\.5\.1/);
+  assert.match(ui, /space-model\.js\?v=1\.5\.1/);
   assert.match(ui, /\$\{file\}\?v=\$\{ASSET_VERSION\}/);
+  assert.match(ui, /<span>Total launch mass<\/span>/);
 });
 
 test("defaults ending in at least six zeros use editable millions", () => {
@@ -140,6 +141,7 @@ test("space mass, availability, batteries, and launch costs respond to parameter
   assert.equal(year.totalSolarAreaKm2, year.requiredGPUs * year.solarAreaM2 / 1e6);
   assert.ok(Math.abs(year.totalHeatRadiationW - year.requiredGPUs * year.itPowerW * spaceDefaults.compute_duty_cycle) < 1e-6);
   assert.equal(year.totalRadiatorAreaKm2, year.requiredGPUs * year.radiatorAreaM2 / 1e6);
+  assert.equal(year.totalLaunchMassKg, year.requiredGPUs * year.dryMassKg);
   assert.equal(base.yearly[0].solarMassKg, base.yearly[0].solarAreaM2 * spaceDefaults.solar_mass_kg_per_m2);
   const heavierSolar = computeSpaceTCO({ ...spaceDefaults, solar_mass_kg_per_m2: 4 });
   assert.equal(heavierSolar.yearly[0].solarAreaM2, base.yearly[0].solarAreaM2);
