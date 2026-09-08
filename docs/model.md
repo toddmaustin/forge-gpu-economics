@@ -398,7 +398,7 @@ The defaults likewise retain the deprecated `thermal_rejection_w_per_m2` value f
 | $C_{telemetry}$ | Telemetry software | $25M/year | Annual autonomy and telemetry software expense. |
 | $c_{ops}$ | Spacecraft operations | $500/GPU-year | Annual per-orbital-GPU operations cost. |
 | $s$ | Spares and servicing | 5% | Spares and servicing allowance as a percentage of new compute and platform acquisition cost. |
-| $c_{EOL}$ | End-of-life cost | $150/kg | End-of-life handling and disposal cost per kilogram launched. |
+| $c_{EOL}$ | Planned end-of-life cost | $50/kg | Lifecycle allowance for a functioning spacecraft designed to perform its own controlled reentry, per kilogram of deployed dry mass. |
 
 Derived quantities used below are:
 
@@ -521,6 +521,59 @@ The $200/kg baseline is a forward-looking mature-launch scenario for a very larg
 A dawn-dusk sun-synchronous orbit is still low Earth orbit. A vehicle launched directly onto the appropriate near-polar trajectory avoids the prohibitive plane change that would follow an equatorial insertion. A purpose-built, high-volume launch system is therefore assumed to incur only an approximately 0--20% SSO increment over its ordinary LEO economics, rather than a multiple of the LEO price. This assumption requires a compatible launch site and trajectory; the relevant orbit is approximately 500--800 km altitude and 97--99 degrees inclination.
 
 Recommended launch-cost cases for sensitivity analysis are $500/kg conservative, $200/kg baseline, and $100/kg optimistic, with $50/kg reserved as a technology-limit case. At the baseline, a 100-tonne payload costs $20 million to launch; the same $20 million mission carrying 200 tonnes would reach $100/kg. These economics depend on large dedicated payloads, rapid complete reuse, and very high flight cadence, and remain unproven. Launch cost should therefore be treated as one of the space model's most important sensitivity inputs rather than as a forecast.
+
+### End-of-life disposal
+
+The end-of-life input is a **planned self-disposal lifecycle allowance**, not a detailed orbital-disposal simulation or the price of recovering a failed spacecraft. The $50/kg baseline assumes a large, mass-produced spacecraft in an approximately 600--850 km dawn-dusk sun-synchronous orbit that is designed from the outset to retain propulsion, guidance, and communications for a controlled atmospheric reentry. This resembles the orbit and disposal concept described in the [American Astronomical Society's comments on Starcloud's FCC application](https://compasse.aas.org/aas-starcloud-data-centers-comment/). It is an engineering estimate rather than a published market price.
+
+For a circular starting orbit, a two-body impulsive estimate of the retrograde burn needed to lower perigee to approximately 80 km gives:
+
+| Starting altitude | Approximate deorbit $\Delta v$ |
+|---:|---:|
+| 600 km | 148 m/s |
+| 700 km | 174 m/s |
+| 800 km | 199 m/s |
+| 850 km | 212 m/s |
+
+FORGE's baseline rationale budgets $\Delta v_{disposal}\approx250$ m/s to add targeting and maneuver margin. With conventional chemical propulsion at $I_{sp}=320$ s, the ideal rocket equation gives the reserved propellant fraction relative to post-burn mass:
+
+$$\frac{m_0}{m_f}=e^{\Delta v/(I_{sp}g_0)}=e^{250/(320\times9.81)}\approx1.083$$
+
+The resulting disposal propellant is approximately 8.3% of the dry spacecraft mass. At the model's $200/kg launch baseline, merely delivering that reserved propellant costs about $0.083\times\$200=\$17$ per kilogram of dry spacecraft. The rest of the baseline is allocated as follows:
+
+| Planned-disposal component | Baseline cost per kg of deployed dry mass |
+|---|---:|
+| Launch burden of reserved deorbit propellant | $17/kg |
+| Additional tanks, thruster capacity, and redundancy | ~$15/kg |
+| Guidance, tracking, end-of-life operations, and compliance | ~$10/kg |
+| Engineering, safety, and design-for-demise allowance | ~$8/kg |
+| **Total** | **~$50/kg** |
+
+The final three rows are engineering allowances, not vendor quotes. Their effective per-kilogram cost assumes that fixed engineering and operational work is spread over large, multi-ton, mass-produced spacecraft. Recommended planned-disposal sensitivity cases are **$25/kg optimistic, $50/kg baseline, and $100/kg conservative**.
+
+The model applies the allowance to the same per-GPU dry-mass basis used for launch:
+
+$$C_{EOL}(t)=\Delta N_S(t)m_{dry}(t)c_{EOL}$$
+
+Thus, a unit with 100 kg of modeled dry mass creates a $5,000 end-of-life allowance at the default rate. Solar-array, battery, and radiator mass are included because they are part of $m_{dry}(t)$. The calculation also captures the effect of solar degradation: later deployments can require larger, heavier arrays, so their modeled disposal allowance can be higher.
+
+For accounting purposes, the full allowance is recognized when each initial, growth, or replacement unit is **deployed**, in the same model year as its launch. It is not charged when that particular unit actually retires. This convention provisions for eventual disposal even when retirement falls after the TCO horizon and prevents the result from depending on whether a retirement happens just inside or just outside that horizon. It also means the yearly end-of-life entry is a cost accrual rather than a forecast of disposal cash-flow timing. Although presented as space OPEX in the summary, it behaves as a mass-scaled lifecycle provision.
+
+The $/kg approximation is useful because propellant and its launch burden scale nearly linearly with spacecraft mass for a fixed $\Delta v$. Operations and compliance, however, are more naturally costs per spacecraft. A more detailed formulation would separate the mass-dependent and fixed terms:
+
+$$C_{planned}=M c_L\left(e^{\Delta v/(I_{sp}g_0)}-1\right)+C_{hardware}+C_{operations}$$
+
+and derive the effective input as $c_{EOL}=C_{planned}/M$. The current single rate is reasonable for first-order TCO comparisons but should be recalculated when spacecraft mass, launch price, propulsion technology, orbit, or production scale changes materially.
+
+Failed self-disposal is a separate and much more expensive case. NASA's 2024 orbital-debris cost analysis estimates external-removal ranges of approximately **$3,000--$40,000/kg** for tug-assisted uncontrolled reentry, **$4,000--$60,000/kg** for tug-assisted controlled reentry, and **$4,000--$10,000/kg** for tug-assisted recycling ([NASA OTPS report, Table 3](https://ntrs.nasa.gov/api/citations/20240003484/downloads/2024%20-%20OTPS%20-%20CBA%20of%20Orbital%20Debris%20Phase%202%20v3.pdf)). Those operations require launch, rendezvous, capture, and removal of a non-cooperative object and are not included in the $50/kg planned-disposal default. Controlled reentry or design for demise can also be necessary for large structures to satisfy public-safety constraints; NASA's standard uses a human-casualty risk threshold of less than $10^{-4}$ for an uncontrolled reentry ([NASA-STD-8719.14C](https://standards.nasa.gov/sites/default/files/standards/NASA/C/0/nasa-std-871914c.pdf)).
+
+An expected-cost extension could therefore distinguish planned and failed disposal:
+
+$$C_{EOL}=M\left(c_{planned}+p_{fail}c_{failed}\right)$$
+
+For example, the deliberately optimistic future-tug assumption $c_{failed}=\$5{,}000/kg$ and a 1% self-disposal failure probability increase the expected rate from $50/kg to $100/kg. The present implementation has neither parameter, so users who need an expected-cost estimate may fold a chosen failure allowance into $c_{EOL}$; mission studies should model it separately.
+
+This first-order treatment also does **not** model deployment cohorts, actual disposal timing, orbit-specific disposal rules, tug or launch batching, hardware recovery, salvage or recycling value, insurance or liability exposure, or environmental externalities. Propulsion hardware and propellant represented by $m_{prop}$ affect the mass-based allowance, but the model does not verify that they reserve the assumed 250 m/s or remain functional at end of life.
 
 ### Space cost ledger
 
