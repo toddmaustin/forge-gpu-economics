@@ -341,7 +341,7 @@ function renderSpace() {
     const y = z.yearly[0];
     $("#fleet-summary").innerHTML = `<div><span>Year-1 workload</span><strong>${num(y.workloadGPUs)} GPU-eq.</strong></div><div><span>Required orbital GPUs</span><strong>${num(y.requiredGPUs)}</strong></div>
       <div><span>Useful service availability</span><strong>${(100*x.space_useful_performance_ratio*x.compute_duty_cycle*x.weather_availability).toFixed(1)}%</strong></div><div><span>IT power / GPU</span><strong>${power(y.itPowerW)}</strong></div>
-      <div><span>Total IT power consumption</span><strong>${power(y.totalITPowerW)}</strong></div><div><span>Total solar power generation</span><strong>${power(y.totalSolarPowerW)}</strong></div>
+      <div><span>IT power consumption</span><strong>${power(y.totalITPowerW)}</strong></div><div><span>Total solar power generation</span><strong>${power(y.totalSolarPowerW)}</strong></div>
       <div><span>Solar panel size</span><strong>${y.totalSolarAreaKm2.toFixed(3)} km²</strong></div><div><span>Total heat radiation</span><strong>${power(y.totalHeatRadiationW)}</strong></div>
       <div><span>Radiator size</span><strong>${y.totalRadiatorAreaKm2.toFixed(3)} km²</strong></div>
       <div><span>Average orbital power / GPU</span><strong>${power(y.averagePowerW)}</strong></div><div><span>Launch mass / GPU</span><strong>${y.dryMassKg.toFixed(1)} kg</strong></div>
