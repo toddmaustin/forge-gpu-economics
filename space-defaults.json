@@ -47,7 +47,7 @@
   "propulsion_mass_kg_per_gpu": 3,
   "space_useful_performance_ratio": 0.85,
   "radiation_redundancy_factor": 1.15,
-  "space_hardware_lifetime_years": 5,
+  "space_hardware_lifetime_years": 10,
   "qualification_nre": 250000000,
   "space_platform_cost_per_gpu": 20000,
   "solar_power_density_kw_per_m2": 0.3,

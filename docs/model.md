@@ -355,7 +355,7 @@ The terrestrial workload and hardware variables retain the definitions in the ea
 | $m_{prop}$ | Propulsion mass | 3 kg/GPU | Propulsion and propellant mass allocated to each GPU for station keeping and collision avoidance. |
 | $R_{perf}$ | Space useful performance vs. terrestrial GPU | 0.85× | Useful workload throughput of one orbital GPU relative to one terrestrial vendor GPU. |
 | $R_{rad}$ | Radiation/fault redundancy factor | 1.15× | Extra fleet multiplier for radiation effects, faults, and redundancy. |
-| $L$ | Space hardware lifetime | 5 years | Assumed orbital hardware service life used by the annual replacement allowance. |
+| $L$ | Space hardware lifetime | 10 years | Assumed orbital hardware service life used by the annual replacement allowance. |
 | $C_Q$ | Space qualification NRE | $250M | One-time space-qualification engineering and non-recurring cost. |
 | $c_{platform}$ | Space platform cost | $20,000/GPU | Spacecraft platform hardware cost allocated to each newly launched GPU. |
 
@@ -428,7 +428,7 @@ This is a continuous economic approximation: it permits fractional units and doe
 
 #### Interpreting hardware lifetime
 
-The space hardware lifetime is an assumed average service life that the model converts into a steady annual replenishment allowance. A lifetime of $L$ years replaces $1/L$ of the prior year's required orbital fleet each year after the first modeled year. For example, the default five-year lifetime produces a replacement allowance equal to 20% of the prior year's required fleet per year, beginning in year 2.
+The space hardware lifetime is an assumed average service life that the model converts into a steady annual replenishment allowance. A lifetime of $L$ years replaces $1/L$ of the prior year's required orbital fleet each year after the first modeled year. For example, the default ten-year lifetime produces a replacement allowance equal to 10% of the prior year's required fleet per year, beginning in year 2.
 
 Replacement units are added to the units required for demand growth. They therefore increase compute-hardware and space-platform purchases as well as the associated launch, solar-array, battery, radiator, communications-hardware, spares-and-servicing, and end-of-life costs. Lifetime does not change the required active fleet, its power draw, or its service availability directly; the model assumes that replenishment maintains the required fleet.
 
