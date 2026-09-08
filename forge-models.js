@@ -8,7 +8,7 @@
 export const SPACE_MODEL_CONSIDERATIONS = Object.freeze([
   "Launch: provider, vehicle class, rideshare versus dedicated launch, insurance, schedule risk, and replenishment cadence.",
   "Orbital architecture: altitude and inclination, constellation size, station keeping, collision avoidance, radiation exposure, and end-of-life disposal.",
-  "Power: solar-array and battery sizing, eclipse duty cycle, degradation, pointing constraints, and peak-versus-average compute availability.",
+  "Power: solar-array and battery sizing at continuous peak compute, eclipse duty cycle, degradation, and pointing constraints.",
   "Thermal: radiator area and mass, view factors, operating temperature, deployable structures, and the absence of convective cooling.",
   "Compute hardware: radiation tolerance, shielding, fault recovery, useful performance, mass, volume, qualification, and replacement lifetime.",
   "Communications: ground-station and optical-link CapEx, spectrum and licensing, bandwidth, latency, weather availability, and data-transfer energy.",
@@ -30,7 +30,7 @@ export const FORGE_MODELS = Object.freeze({
     id: "terrestrial-space",
     shortName: "Terrestrial vs. space-based",
     title: "Terrestrial vs. space-based data centers",
-    description: "Compare the Vendor IT terrestrial baseline with a first-order orbital TCO architecture.",
+    description: "Compare Vendor IT with a first-order orbital TCO architecture sized for continuous peak compute.",
     left: "SPACE-BASED",
     right: "TERRESTRIAL",
     considerations: SPACE_MODEL_CONSIDERATIONS,

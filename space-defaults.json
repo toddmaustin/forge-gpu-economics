@@ -56,7 +56,6 @@
   "solar_array_cost_per_w": 35,
   "solar_annual_degradation": 0.025,
   "solar_pointing_efficiency": 0.9,
-  "compute_duty_cycle": 0.9,
   "eclipse_hours_per_day": 0,
   "battery_specific_energy_wh_per_kg": 180,
   "battery_cost_per_kwh": 1000,

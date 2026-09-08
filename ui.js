@@ -93,7 +93,7 @@ const spaceGroups = [
   ]],
   ["Solar power & batteries", [
     ["solar_power_density_kw_per_m2", "Solar power density (kW/m²)", "number", 0.01], ["solar_mass_kg_per_m2", "Solar panel mass (kg/m²)", "number", 0.1], ["solar_array_cost_per_w", "Solar array cost / W", "currency", 1], ["solar_annual_degradation", "Solar degradation / year", "percent", 0.5],
-    ["solar_pointing_efficiency", "Solar pointing efficiency", "percent", 1], ["compute_duty_cycle", "Peak-vs-average compute duty cycle", "percent", 1], ["spacecraft_bus_power_w_per_gpu", "Spacecraft bus power / GPU (W)", "number", 10],
+    ["solar_pointing_efficiency", "Solar pointing efficiency", "percent", 1], ["spacecraft_bus_power_w_per_gpu", "Spacecraft bus power / GPU (W)", "number", 10],
     ["eclipse_hours_per_day", "Eclipse hours / day (sun-sync default: 0)", "number", 0.1], ["battery_specific_energy_wh_per_kg", "Battery specific energy (Wh/kg)", "number", 10], ["battery_cost_per_kwh", "Battery cost / kWh", "currency", 100]
   ]],
   ["Radiative thermal system", [
@@ -343,11 +343,11 @@ function renderSpace() {
     $("#break-even-detail").textContent = "not calculated in first draft";
     const y = z.yearly[0];
     $("#fleet-summary").innerHTML = `<div><span>Year-1 workload</span><strong>${num(y.workloadGPUs)} GPU-eq.</strong></div><div><span>Required orbital GPUs</span><strong>${num(y.requiredGPUs)}</strong></div>
-      <div><span>Useful service availability</span><strong>${(100*x.space_useful_performance_ratio*x.compute_duty_cycle*x.weather_availability).toFixed(1)}%</strong></div><div><span>IT power / GPU</span><strong>${power(y.itPowerW)}</strong></div>
+      <div><span>Useful service availability</span><strong>${(100*x.space_useful_performance_ratio*x.weather_availability).toFixed(1)}%</strong></div><div><span>Peak IT power / GPU</span><strong>${power(y.itPowerW)}</strong></div>
       <div><span>IT power consumption</span><strong>${power(y.totalITPowerW)}</strong></div><div><span>Total solar power generation</span><strong>${power(y.totalSolarPowerW)}</strong></div>
       <div><span>Solar panel size</span><strong>${y.totalSolarAreaKm2.toFixed(3)} km²</strong></div><div><span>Total heat radiation</span><strong>${power(y.totalHeatRadiationW)}</strong></div>
       <div><span>Radiator size</span><strong>${y.totalRadiatorAreaKm2.toFixed(3)} km²</strong></div>
-      <div><span>Average orbital power / GPU</span><strong>${power(y.averagePowerW)}</strong></div><div><span>Launch mass / GPU</span><strong>${y.dryMassKg.toFixed(1)} kg</strong></div>
+      <div><span>Orbital power / GPU at peak compute</span><strong>${power(y.averagePowerW)}</strong></div><div><span>Launch mass / GPU</span><strong>${y.dryMassKg.toFixed(1)} kg</strong></div>
       <div><span>Total launch mass</span><strong>${mass(y.totalLaunchMassKg)}</strong></div>
       <div><span>Solar panel area / GPU</span><strong>${y.solarAreaM2.toFixed(1)} m²</strong></div><div><span>Solar mass / GPU</span><strong>${y.solarMassKg.toFixed(1)} kg</strong></div>
       <div><span>Battery mass / GPU</span><strong>${y.batteryMassKg.toFixed(1)} kg</strong></div>

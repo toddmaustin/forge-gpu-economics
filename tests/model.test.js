@@ -133,7 +133,10 @@ test("space defaults remain compatible with cached pre-1.5 radiator models", () 
 
 test("space mass, availability, batteries, and launch costs respond to parameters", () => {
   const base = computeSpaceTCO(spaceDefaults);
+  const legacyDutyCycle = computeSpaceTCO({ ...spaceDefaults, compute_duty_cycle: 0.01 });
   const eclipse = computeSpaceTCO({ ...spaceDefaults, eclipse_hours_per_day: 1 });
+  assert.deepEqual(legacyDutyCycle.yearly, base.yearly);
+  assert.equal(legacyDutyCycle.spaceTCO, base.spaceTCO);
   assert.equal(base.yearly[0].batteryMassKg, 0);
   assert.ok(eclipse.yearly[0].batteryMassKg > 0);
   assert.ok(eclipse.space.batteries > 0);
@@ -145,10 +148,10 @@ test("space mass, availability, batteries, and launch costs respond to parameter
   assert.ok(Math.abs(eclipse.yearly[0].requiredSunlightPowerW * 23 / 24 - eclipse.yearly[0].averagePowerW) < 1e-6);
   assert.ok(base.yearly[0].requiredGPUs > base.yearly[0].workloadGPUs);
   const year = base.yearly[0];
-  assert.equal(year.totalITPowerW, year.requiredGPUs * year.itPowerW * spaceDefaults.compute_duty_cycle);
+  assert.equal(year.totalITPowerW, year.requiredGPUs * year.itPowerW);
   assert.ok(Math.abs(year.totalSolarPowerW - year.requiredGPUs * year.averagePowerW) < 1e-6);
   assert.equal(year.totalSolarAreaKm2, year.requiredGPUs * year.solarAreaM2 / 1e6);
-  assert.ok(Math.abs(year.totalHeatRadiationW - year.requiredGPUs * year.itPowerW * spaceDefaults.compute_duty_cycle) < 1e-6);
+  assert.ok(Math.abs(year.totalHeatRadiationW - year.requiredGPUs * year.itPowerW) < 1e-6);
   assert.equal(year.totalRadiatorAreaKm2, year.requiredGPUs * year.radiatorAreaM2 / 1e6);
   assert.equal(year.totalLaunchMassKg, year.requiredGPUs * year.dryMassKg);
   assert.equal(base.yearly[0].solarMassKg, base.yearly[0].solarAreaM2 * spaceDefaults.solar_mass_kg_per_m2);
@@ -166,6 +169,6 @@ test("space input validation and sensitivity are usable", () => {
   assert.throws(() => normalizeSpaceInputs({ ...spaceDefaults, weather_availability: 1.1 }), /no more than 100%/);
   assert.throws(() => normalizeSpaceInputs({ ...spaceDefaults, eclipse_hours_per_day: 24 }), /less than 24 hours/);
   const results = spaceSensitivity(spaceDefaults);
-  assert.equal(results.length, 15);
+  assert.equal(results.length, 14);
   assert.ok(results.every(result => Number.isFinite(result.delta)));
 });
