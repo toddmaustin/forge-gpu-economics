@@ -105,6 +105,10 @@ test("model catalog exposes both comparisons and a useful space checklist", () =
 
 test("space model produces balanced, finite ledgers against Vendor IT", () => {
   const z = computeSpaceTCO(spaceDefaults);
+  const expectedEndOfLife = z.yearly.reduce((total, year) =>
+    total + year.newUnits * year.dryMassKg * spaceDefaults.end_of_life_cost_per_kg, 0);
+  assert.equal(spaceDefaults.end_of_life_cost_per_kg, 50);
+  assert.ok(Math.abs(z.space.endOfLife - expectedEndOfLife) < 1e-6);
   assert.ok(Number.isFinite(z.spaceTCO) && z.spaceTCO > 0);
   assert.ok(Number.isFinite(z.terrestrialTCO) && z.terrestrialTCO > 0);
   assert.ok(Math.abs(Object.values(z.space).reduce((a, b) => a + b, 0) - z.spaceTCO) < 1e-6);

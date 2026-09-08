@@ -78,5 +78,5 @@
   "telemetry_software_per_year": 25000000,
   "operations_per_spacecraft_year": 500,
   "spares_servicing_percent": 5,
-  "end_of_life_cost_per_kg": 150
+  "end_of_life_cost_per_kg": 50
 }
