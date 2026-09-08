@@ -137,7 +137,12 @@ test("space mass, availability, batteries, and launch costs respond to parameter
   assert.equal(base.yearly[0].batteryMassKg, 0);
   assert.ok(eclipse.yearly[0].batteryMassKg > 0);
   assert.ok(eclipse.space.batteries > 0);
+  assert.ok(eclipse.yearly[0].solarAreaM2 > base.yearly[0].solarAreaM2);
+  assert.ok(eclipse.yearly[0].solarMassKg > base.yearly[0].solarMassKg);
+  assert.ok(eclipse.space.solarArrays > base.space.solarArrays);
   assert.ok(eclipse.space.launch > base.space.launch);
+  assert.equal(eclipse.yearly[0].sunlightFraction, 23 / 24);
+  assert.ok(Math.abs(eclipse.yearly[0].requiredSunlightPowerW * 23 / 24 - eclipse.yearly[0].averagePowerW) < 1e-6);
   assert.ok(base.yearly[0].requiredGPUs > base.yearly[0].workloadGPUs);
   const year = base.yearly[0];
   assert.equal(year.totalITPowerW, year.requiredGPUs * year.itPowerW * spaceDefaults.compute_duty_cycle);
@@ -159,6 +164,7 @@ test("space mass, availability, batteries, and launch costs respond to parameter
 
 test("space input validation and sensitivity are usable", () => {
   assert.throws(() => normalizeSpaceInputs({ ...spaceDefaults, weather_availability: 1.1 }), /no more than 100%/);
+  assert.throws(() => normalizeSpaceInputs({ ...spaceDefaults, eclipse_hours_per_day: 24 }), /less than 24 hours/);
   const results = spaceSensitivity(spaceDefaults);
   assert.equal(results.length, 15);
   assert.ok(results.every(result => Number.isFinite(result.delta)));

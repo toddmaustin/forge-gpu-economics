@@ -460,9 +460,15 @@ $$P_{avg}=P_{IT}D_{compute}+P_{bus}+P_{transfer}$$
 
 ### Solar arrays and batteries
 
-Solar-panel area is derived first from power density, pointing efficiency, and annual degradation (the factor of 1000 converts kW to W). Panel mass is then derived from its area and areal mass density:
+The fraction of each day in sunlight and the solar power required while illuminated are:
 
-$$A_{solar}(t)=\frac{P_{avg}}{1000q_{solar}\eta_{point}(1-d_{solar})^t}$$
+$$f_{sun}=\frac{24-H_{eclipse}}{24}$$
+
+$$P_{sun}=\frac{P_{avg}}{f_{sun}}$$
+
+Thus the arrays supply the live spacecraft load and replenish the eclipse energy while sunlight is available. Solar-panel area is derived from this required sunlight power, power density, pointing efficiency, and annual degradation (the factor of 1000 converts kW to W). Panel mass is then derived from its area and areal mass density:
+
+$$A_{solar}(t)=\frac{P_{sun}}{1000q_{solar}\eta_{point}(1-d_{solar})^t}$$
 
 $$m_{solar}(t)=A_{solar}(t)\mu_{solar}$$
 
@@ -472,7 +478,7 @@ $$C_{solar}(t)=\Delta N_S(t)A_{solar}(t)(1000q_{solar})c_{solar}$$
 
 The 0.3 kW/m² default is 300 W/m² of beginning-of-life rated electrical output, not 0.3 W/m². It is a plausible array-level round number near Earth: incident solar flux is approximately 1,361 W/m², and 300 W/m² corresponds to about 22% net conversion after cell efficiency, packing, wiring, temperature, mismatch, and structural losses. It is also internally consistent with the retained legacy defaults because 300 W/m² divided by 2 kg/m² is 150 W/kg. Pointing efficiency and annual degradation are applied separately, so effective first-year output at the default 90% pointing efficiency is 270 W/m².
 
-The model assumes that solar arrays reject their own unconverted absorbed solar energy from their panel surfaces; it does not route all array waste heat through the compute radiators. Power-conditioning, cable, and other conversion losses are not separately modeled. A detailed design should verify array equilibrium temperature and add any losses conducted into the spacecraft thermal loop.
+The model assumes that solar arrays reject their own unconverted absorbed solar energy from their panel surfaces; it does not route all array waste heat through the compute radiators. Battery charge/discharge, power-conditioning, cable, and other conversion losses are not separately modeled, so this is an ideal daily energy balance. A detailed design should verify array equilibrium temperature and add electrical margins and any losses conducted into the spacecraft thermal loop.
 
 Battery energy, mass, and cost are:
 
@@ -482,7 +488,7 @@ $$m_{battery}=\frac{E_{battery}}{e_{battery}}$$
 
 $$C_{battery}(t)=\Delta N_S(t)\frac{E_{battery}}{1000}c_{battery}$$
 
-The illustrative sun-synchronous default assumes continuous sunlight and sets eclipse hours, battery energy, battery mass, and battery cost to zero. Other orbital scenarios should provide an appropriate eclipse duration.
+The illustrative sun-synchronous default assumes continuous sunlight and sets eclipse hours, battery energy, battery mass, and battery cost to zero. Other orbital scenarios should provide an appropriate eclipse duration below 24 hours. Increasing it increases both battery capacity and solar-array area because the daily energy demand must be generated during fewer sunlight hours.
 
 ### Radiative thermal system
 
