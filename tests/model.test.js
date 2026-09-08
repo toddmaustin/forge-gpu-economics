@@ -136,7 +136,7 @@ test("space mass, availability, batteries, and launch costs respond to parameter
   assert.ok(base.yearly[0].requiredGPUs > base.yearly[0].workloadGPUs);
   const year = base.yearly[0];
   assert.equal(year.totalITPowerW, year.requiredGPUs * year.itPowerW * spaceDefaults.compute_duty_cycle);
-  assert.equal(year.totalSolarPowerW, year.requiredGPUs * year.averagePowerW);
+  assert.ok(Math.abs(year.totalSolarPowerW - year.requiredGPUs * year.averagePowerW) < 1e-6);
   assert.equal(year.totalSolarAreaKm2, year.requiredGPUs * year.solarAreaM2 / 1e6);
   assert.ok(Math.abs(year.totalHeatRadiationW - year.requiredGPUs * year.itPowerW * spaceDefaults.compute_duty_cycle) < 1e-6);
   assert.equal(year.totalRadiatorAreaKm2, year.requiredGPUs * year.radiatorAreaM2 / 1e6);

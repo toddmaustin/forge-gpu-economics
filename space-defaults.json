@@ -45,7 +45,7 @@
   "bus_structure_mass_kg_per_gpu": 18,
   "shielding_mass_kg_per_gpu": 12,
   "propulsion_mass_kg_per_gpu": 3,
-  "space_useful_performance_ratio": 0.85,
+  "space_useful_performance_ratio": 0.95,
   "radiation_redundancy_factor": 1.15,
   "space_hardware_lifetime_years": 10,
   "qualification_nre": 250000000,

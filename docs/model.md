@@ -353,7 +353,7 @@ The terrestrial workload and hardware variables retain the definitions in the ea
 | $m_{bus}$ | Bus and structure mass | 18 kg/GPU | Spacecraft bus and structural mass allocated to each GPU. |
 | $m_{shield}$ | Shielding mass | 12 kg/GPU | Radiation and physical shielding mass allocated to each GPU. |
 | $m_{prop}$ | Propulsion mass | 3 kg/GPU | Propulsion and propellant mass allocated to each GPU for station keeping and collision avoidance. |
-| $R_{perf}$ | Space useful performance vs. terrestrial GPU | 0.85× | Useful workload throughput of one orbital GPU relative to one terrestrial vendor GPU. |
+| $R_{perf}$ | Space useful performance vs. terrestrial GPU | 0.95× | Useful workload throughput of one available orbital GPU relative to one terrestrial vendor GPU. |
 | $R_{rad}$ | Radiation/fault redundancy factor | 1.15× | Extra fleet multiplier for radiation effects, faults, and redundancy. |
 | $L$ | Space hardware lifetime | 10 years | Assumed orbital hardware service life used by the annual replacement allowance. |
 | $C_Q$ | Space qualification NRE | $250M | One-time space-qualification engineering and non-recurring cost. |
@@ -419,6 +419,16 @@ Derived quantities used below are:
 The model converts terrestrial GPU-equivalent demand into an orbital fleet using useful performance, compute duty cycle, ground-link weather availability, and radiation/fault redundancy:
 
 $$N_S(t)=\frac{N_V(t)R_{rad}}{R_{perf}D_{compute}A_{weather}}$$
+
+#### Distinguishing useful performance from radiation redundancy
+
+$R_{perf}$ describes the useful throughput delivered by each **available, functioning** orbital GPU relative to a terrestrial GPU. The default value of 0.95 means that an orbital GPU is assumed to complete 95% as much useful work in a given unit of active compute time. This modest derating can represent conservative clock or power limits, thermal constraints, space-qualified packaging and system bottlenecks, or processing overhead such as error checking, checkpointing, retries, and validation. It is an aggregate scenario assumption rather than a physical prediction that a GPU intrinsically becomes slower in orbit.
+
+$R_{rad}$ instead describes **additional deployed fleet capacity**. The default value of 1.15 means that 15% extra GPUs are provisioned to tolerate radiation upsets, faults, and unavailable hardware while maintaining the target workload. It does not reduce the throughput of a functioning device; it increases the number of devices purchased, launched, powered, and operated.
+
+The two parameters therefore represent different consequences even though both increase the fleet in the equation above: useful-performance losses reduce productive work per available GPU and appear in the denominator, whereas redundancy adds standby or substitute capacity and appears in the numerator. To avoid double counting, temporary or permanent device unavailability covered by spare capacity should be assigned to $R_{rad}$, while recurring per-device processing overhead should be assigned to $R_{perf}$. Radiation effects should affect both only when independently justified—for example, error-checking overhead may reduce useful performance while separate spare hardware covers devices taken offline. Radiation-driven early retirement belongs in the hardware-lifetime assumption rather than either factor.
+
+If an orbital GPU is expected to match terrestrial useful throughput whenever it is operating, $R_{perf}$ should be set to 1.0 and any additional fault-tolerance capacity should be represented by $R_{rad}$. Compute scheduling gaps belong to $D_{compute}$, and ground-link outages belong to $A_{weather}$.
 
 New hardware covers both demand growth and a first-order annual replacement allowance:
 
