@@ -355,7 +355,7 @@ The terrestrial workload and hardware variables retain the definitions in the ea
 | $m_{prop}$ | Propulsion mass | 3 kg/GPU | Propulsion and propellant mass allocated to each GPU for station keeping and collision avoidance. |
 | $R_{perf}$ | Space useful performance vs. terrestrial GPU | 0.85× | Useful workload throughput of one orbital GPU relative to one terrestrial vendor GPU. |
 | $R_{rad}$ | Radiation/fault redundancy factor | 1.15× | Extra fleet multiplier for radiation effects, faults, and redundancy. |
-| $L$ | Space hardware lifetime | 5 years | Assumed orbital hardware service life used by the annual replacement allowance. |
+| $L$ | Space hardware lifetime | 10 years | Assumed orbital hardware service life used by the annual replacement allowance. |
 | $C_Q$ | Space qualification NRE | $250M | One-time space-qualification engineering and non-recurring cost. |
 | $c_{platform}$ | Space platform cost | $20,000/GPU | Spacecraft platform hardware cost allocated to each newly launched GPU. |
 
@@ -426,20 +426,13 @@ $$\Delta N_S(t)=\max(0,N_S(t)-N_S(t-1))+\begin{cases}0,&t=0\\N_S(t-1)/L,&t>0\end
 
 This is a continuous economic approximation: it permits fractional units and does not batch GPUs into spacecraft or launch vehicles.
 
-#### Radiation protection, tolerance, and cost
+#### Interpreting hardware lifetime
 
-Radiation protection is represented by two deliberately coarse economic allowances rather than by a radiation-effects simulation:
+The space hardware lifetime is an assumed average service life that the model converts into a steady annual replenishment allowance. A lifetime of $L$ years replaces $1/L$ of the prior year's required orbital fleet each year after the first modeled year. For example, the default ten-year lifetime produces a replacement allowance equal to 10% of the prior year's required fleet per year, beginning in year 2.
 
-1. **Passive shielding:** the default assigns 12 kg of radiation and physical shielding to every newly launched GPU. That mass enters dry mass, so it incurs both the $200/kg launch charge and the $150/kg end-of-life charge. The model does not specify shielding material, thickness, placement, or effectiveness.
-2. **Fault tolerance through redundancy:** the default 1.15 radiation/fault factor multiplies the required orbital fleet before growth and replacement units are calculated. It therefore provisions 15% more GPUs (and their associated platform, power, thermal, communications, operations, launch, servicing, and disposal costs) than an otherwise identical factor of 1.0. The factor is an aggregate capacity allowance; the model does not prescribe lockstep execution, voting, checkpoint/restart, ECC, memory scrubbing, or another recovery mechanism.
+Replacement units are added to the units required for demand growth. They therefore increase compute-hardware and space-platform purchases as well as the associated launch, solar-array, battery, radiator, communications-hardware, spares-and-servicing, and end-of-life costs. Lifetime does not change the required active fleet, its power draw, or its service availability directly; the model assumes that replenishment maintains the required fleet.
 
-The modeled interference is not characterized beyond the label **radiation effects**. In particular, the model has no orbit-dependent particle spectrum, total-ionizing-dose rate, displacement damage, solar-particle events, single-event upsets, latch-up, or destructive-event rate. Consequently, it cannot establish which physical radiation dominates, calculate an error rate, or demonstrate that the defaults achieve a target reliability. The separate “thermal radiation” input describes radiator heat rejection to space and is not part of radiation-error protection.
-
-At the illustrative defaults, shielding costs $4,200 per newly launched GPU directly through mass charges alone:
-
-$$12\ \text{kg}\times(\$200/\text{kg}+\$150/\text{kg})=\$4{,}200$$
-
-Across the four-year scenario's approximately 188,369 new and replacement units, removing only shielding reduces modeled space TCO by approximately **$791.1M**. Setting only the redundancy factor from 1.15 to 1.0 reduces it by approximately **$4.993B**. These two marginal figures must not be added because shielding and redundancy interact: fewer redundant units also means less shielding. Removing both assumptions together reduces space TCO from approximately **$39.260B to $33.579B**, a combined modeled radiation-protection allowance of approximately **$5.681B**. This is a counterfactual cost attribution, not a separately itemized radiation ledger or a claim that an unprotected mission is viable. Space-qualification NRE and the five-year replacement lifetime may also cover radiation-related engineering or degradation, but the model does not allocate either cost specifically to radiation.
+The reciprocal $1/L$ can be read as an implied average annual replacement fraction, but it is **not an explicit device failure rate or reliability model**. The calculation does not track device ages or deployment cohorts, sample random failures, apply a time-varying failure hazard, distinguish scheduled retirement from unexpected failure, or represent downtime while failed hardware awaits replacement. The lifetime parameter is therefore best interpreted as an economic proxy for all causes of retirement and replacement, not as a prediction that each device has an independent $1/L$ probability of failing in a given year.
 
 ### Orbital electrical load
 
