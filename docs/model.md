@@ -353,9 +353,9 @@ The terrestrial workload and hardware variables retain the definitions in the ea
 | $m_{bus}$ | Bus and structure mass | 18 kg/GPU | Spacecraft bus and structural mass allocated to each GPU. |
 | $m_{shield}$ | Shielding mass | 12 kg/GPU | Radiation and physical shielding mass allocated to each GPU. |
 | $m_{prop}$ | Propulsion mass | 3 kg/GPU | Propulsion and propellant mass allocated to each GPU for station keeping and collision avoidance. |
-| $R_{perf}$ | Space useful performance vs. terrestrial GPU | 0.85× | Useful workload throughput of one orbital GPU relative to one terrestrial vendor GPU. |
+| $R_{perf}$ | Space useful performance vs. terrestrial GPU | 0.95× | Useful workload throughput of one available orbital GPU relative to one terrestrial vendor GPU. |
 | $R_{rad}$ | Radiation/fault redundancy factor | 1.15× | Extra fleet multiplier for radiation effects, faults, and redundancy. |
-| $L$ | Space hardware lifetime | 5 years | Assumed orbital hardware service life used by the annual replacement allowance. |
+| $L$ | Space hardware lifetime | 10 years | Assumed orbital hardware service life used by the annual replacement allowance. |
 | $C_Q$ | Space qualification NRE | $250M | One-time space-qualification engineering and non-recurring cost. |
 | $c_{platform}$ | Space platform cost | $20,000/GPU | Spacecraft platform hardware cost allocated to each newly launched GPU. |
 
@@ -420,11 +420,29 @@ The model converts terrestrial GPU-equivalent demand into an orbital fleet using
 
 $$N_S(t)=\frac{N_V(t)R_{rad}}{R_{perf}D_{compute}A_{weather}}$$
 
+#### Distinguishing useful performance from radiation redundancy
+
+$R_{perf}$ describes the useful throughput delivered by each **available, functioning** orbital GPU relative to a terrestrial GPU. The default value of 0.95 means that an orbital GPU is assumed to complete 95% as much useful work in a given unit of active compute time. This modest derating can represent conservative clock or power limits, thermal constraints, space-qualified packaging and system bottlenecks, or processing overhead such as error checking, checkpointing, retries, and validation. It is an aggregate scenario assumption rather than a physical prediction that a GPU intrinsically becomes slower in orbit.
+
+$R_{rad}$ instead describes **additional deployed fleet capacity**. The default value of 1.15 means that 15% extra GPUs are provisioned to tolerate radiation upsets, faults, and unavailable hardware while maintaining the target workload. It does not reduce the throughput of a functioning device; it increases the number of devices purchased, launched, powered, and operated.
+
+The two parameters therefore represent different consequences even though both increase the fleet in the equation above: useful-performance losses reduce productive work per available GPU and appear in the denominator, whereas redundancy adds standby or substitute capacity and appears in the numerator. To avoid double counting, temporary or permanent device unavailability covered by spare capacity should be assigned to $R_{rad}$, while recurring per-device processing overhead should be assigned to $R_{perf}$. Radiation effects should affect both only when independently justified—for example, error-checking overhead may reduce useful performance while separate spare hardware covers devices taken offline. Radiation-driven early retirement belongs in the hardware-lifetime assumption rather than either factor.
+
+If an orbital GPU is expected to match terrestrial useful throughput whenever it is operating, $R_{perf}$ should be set to 1.0 and any additional fault-tolerance capacity should be represented by $R_{rad}$. Compute scheduling gaps belong to $D_{compute}$, and ground-link outages belong to $A_{weather}$.
+
 New hardware covers both demand growth and a first-order annual replacement allowance:
 
 $$\Delta N_S(t)=\max(0,N_S(t)-N_S(t-1))+\begin{cases}0,&t=0\\N_S(t-1)/L,&t>0\end{cases}$$
 
 This is a continuous economic approximation: it permits fractional units and does not batch GPUs into spacecraft or launch vehicles.
+
+#### Interpreting hardware lifetime
+
+The space hardware lifetime is an assumed average service life that the model converts into a steady annual replenishment allowance. A lifetime of $L$ years replaces $1/L$ of the prior year's required orbital fleet each year after the first modeled year. For example, the default ten-year lifetime produces a replacement allowance equal to 10% of the prior year's required fleet per year, beginning in year 2.
+
+Replacement units are added to the units required for demand growth. They therefore increase compute-hardware and space-platform purchases as well as the associated launch, solar-array, battery, radiator, communications-hardware, spares-and-servicing, and end-of-life costs. Lifetime does not change the required active fleet, its power draw, or its service availability directly; the model assumes that replenishment maintains the required fleet.
+
+The reciprocal $1/L$ can be read as an implied average annual replacement fraction, but it is **not an explicit device failure rate or reliability model**. The calculation does not track device ages or deployment cohorts, sample random failures, apply a time-varying failure hazard, distinguish scheduled retirement from unexpected failure, or represent downtime while failed hardware awaits replacement. The lifetime parameter is therefore best interpreted as an economic proxy for all causes of retirement and replacement, not as a prediction that each device has an independent $1/L$ probability of failing in a given year.
 
 ### Orbital electrical load
 
