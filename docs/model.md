@@ -426,6 +426,21 @@ $$\Delta N_S(t)=\max(0,N_S(t)-N_S(t-1))+\begin{cases}0,&t=0\\N_S(t-1)/L,&t>0\end
 
 This is a continuous economic approximation: it permits fractional units and does not batch GPUs into spacecraft or launch vehicles.
 
+#### Radiation protection, tolerance, and cost
+
+Radiation protection is represented by two deliberately coarse economic allowances rather than by a radiation-effects simulation:
+
+1. **Passive shielding:** the default assigns 12 kg of radiation and physical shielding to every newly launched GPU. That mass enters dry mass, so it incurs both the $200/kg launch charge and the $150/kg end-of-life charge. The model does not specify shielding material, thickness, placement, or effectiveness.
+2. **Fault tolerance through redundancy:** the default 1.15 radiation/fault factor multiplies the required orbital fleet before growth and replacement units are calculated. It therefore provisions 15% more GPUs (and their associated platform, power, thermal, communications, operations, launch, servicing, and disposal costs) than an otherwise identical factor of 1.0. The factor is an aggregate capacity allowance; the model does not prescribe lockstep execution, voting, checkpoint/restart, ECC, memory scrubbing, or another recovery mechanism.
+
+The modeled interference is not characterized beyond the label **radiation effects**. In particular, the model has no orbit-dependent particle spectrum, total-ionizing-dose rate, displacement damage, solar-particle events, single-event upsets, latch-up, or destructive-event rate. Consequently, it cannot establish which physical radiation dominates, calculate an error rate, or demonstrate that the defaults achieve a target reliability. The separate “thermal radiation” input describes radiator heat rejection to space and is not part of radiation-error protection.
+
+At the illustrative defaults, shielding costs $4,200 per newly launched GPU directly through mass charges alone:
+
+$$12\ \text{kg}\times(\$200/\text{kg}+\$150/\text{kg})=\$4{,}200$$
+
+Across the four-year scenario's approximately 188,369 new and replacement units, removing only shielding reduces modeled space TCO by approximately **$791.1M**. Setting only the redundancy factor from 1.15 to 1.0 reduces it by approximately **$4.993B**. These two marginal figures must not be added because shielding and redundancy interact: fewer redundant units also means less shielding. Removing both assumptions together reduces space TCO from approximately **$39.260B to $33.579B**, a combined modeled radiation-protection allowance of approximately **$5.681B**. This is a counterfactual cost attribution, not a separately itemized radiation ledger or a claim that an unprotected mission is viable. Space-qualification NRE and the five-year replacement lifetime may also cover radiation-related engineering or degradation, but the model does not allocate either cost specifically to radiation.
+
 ### Orbital electrical load
 
 Per-GPU IT power uses the vendor logic, HBM, and host/network assumptions:
