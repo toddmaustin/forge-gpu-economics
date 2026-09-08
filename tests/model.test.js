@@ -70,13 +70,14 @@ test("browser entry points cache-bust the current assets", () => {
   const index = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
   const ui = fs.readFileSync(new URL("../ui.js", import.meta.url), "utf8");
 
-  assert.match(index, /styles\.css\?v=1\.5\.0/);
-  assert.match(index, /ui\.js\?v=1\.5\.0/);
-  assert.match(ui, /model\.js\?v=1\.5\.0/);
-  assert.match(ui, /forge-models\.js\?v=1\.5\.0/);
-  assert.match(ui, /input-units\.js\?v=1\.5\.0/);
-  assert.match(ui, /space-model\.js\?v=1\.5\.0/);
+  assert.match(index, /styles\.css\?v=1\.5\.1/);
+  assert.match(index, /ui\.js\?v=1\.5\.1/);
+  assert.match(ui, /model\.js\?v=1\.5\.1/);
+  assert.match(ui, /forge-models\.js\?v=1\.5\.1/);
+  assert.match(ui, /input-units\.js\?v=1\.5\.1/);
+  assert.match(ui, /space-model\.js\?v=1\.5\.1/);
   assert.match(ui, /\$\{file\}\?v=\$\{ASSET_VERSION\}/);
+  assert.match(ui, /<span>Total launch mass<\/span>/);
 });
 
 test("defaults ending in at least six zeros use editable millions", () => {
