@@ -20,6 +20,9 @@ const power = watts => {
   if (Math.abs(watts) >= 1e3) return `${(watts / 1e3).toFixed(1)} kW`;
   return `${num(watts)} W`;
 };
+const mass = kilograms => Math.abs(kilograms) >= 1000
+  ? `${(kilograms / 1000).toLocaleString(undefined, { maximumFractionDigits: 1 })} tonnes`
+  : `${kilograms.toFixed(1)} kg`;
 const groupLabel = (name, entries) => `${name} (${money(entries.reduce((sum, [, value]) => sum + value, 0))})`;
 
 const buyBuildGroups = [
@@ -345,6 +348,7 @@ function renderSpace() {
       <div><span>Solar panel size</span><strong>${y.totalSolarAreaKm2.toFixed(3)} km²</strong></div><div><span>Total heat radiation</span><strong>${power(y.totalHeatRadiationW)}</strong></div>
       <div><span>Radiator size</span><strong>${y.totalRadiatorAreaKm2.toFixed(3)} km²</strong></div>
       <div><span>Average orbital power / GPU</span><strong>${power(y.averagePowerW)}</strong></div><div><span>Launch mass / GPU</span><strong>${y.dryMassKg.toFixed(1)} kg</strong></div>
+      <div><span>Total launch mass</span><strong>${mass(y.totalLaunchMassKg)}</strong></div>
       <div><span>Solar panel area / GPU</span><strong>${y.solarAreaM2.toFixed(1)} m²</strong></div><div><span>Solar mass / GPU</span><strong>${y.solarMassKg.toFixed(1)} kg</strong></div>
       <div><span>Battery mass / GPU</span><strong>${y.batteryMassKg.toFixed(1)} kg</strong></div>
       <div><span>Radiator area / GPU</span><strong>${y.radiatorAreaM2.toFixed(1)} m²</strong></div><div><span>Radiator mass / GPU</span><strong>${y.radiatorMassKg.toFixed(1)} kg</strong></div>`;
