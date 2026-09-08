@@ -426,6 +426,14 @@ $$\Delta N_S(t)=\max(0,N_S(t)-N_S(t-1))+\begin{cases}0,&t=0\\N_S(t-1)/L,&t>0\end
 
 This is a continuous economic approximation: it permits fractional units and does not batch GPUs into spacecraft or launch vehicles.
 
+#### Interpreting hardware lifetime
+
+The space hardware lifetime is an assumed average service life that the model converts into a steady annual replenishment allowance. A lifetime of $L$ years replaces $1/L$ of the prior year's required orbital fleet each year after the first modeled year. For example, the default five-year lifetime produces a replacement allowance equal to 20% of the prior year's required fleet per year, beginning in year 2.
+
+Replacement units are added to the units required for demand growth. They therefore increase compute-hardware and space-platform purchases as well as the associated launch, solar-array, battery, radiator, communications-hardware, spares-and-servicing, and end-of-life costs. Lifetime does not change the required active fleet, its power draw, or its service availability directly; the model assumes that replenishment maintains the required fleet.
+
+The reciprocal $1/L$ can be read as an implied average annual replacement fraction, but it is **not an explicit device failure rate or reliability model**. The calculation does not track device ages or deployment cohorts, sample random failures, apply a time-varying failure hazard, distinguish scheduled retirement from unexpected failure, or represent downtime while failed hardware awaits replacement. The lifetime parameter is therefore best interpreted as an economic proxy for all causes of retirement and replacement, not as a prediction that each device has an independent $1/L$ probability of failing in a given year.
+
 ### Orbital electrical load
 
 Per-GPU IT power uses the vendor logic, HBM, and host/network assumptions:
