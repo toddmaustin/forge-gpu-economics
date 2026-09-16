@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import { computeTCO, grossDiesPerWafer, breakEvenFleet, normalizeInputs, sensitivity } from "../model.js";
 import { FORGE_MODELS, SPACE_MODEL_CONSIDERATIONS, getForgeModel } from "../forge-models.js";
-import { computeSpaceTCO, normalizeSpaceInputs, spaceSensitivity } from "../space-model.js";
+import { computeSpaceTCO, normalizeSpaceInputs, optimizeCooling, spaceSensitivity } from "../space-model.js";
 import { inputPresentation, usesMillions, valueFromInput } from "../input-units.js";
 
 const defaults = JSON.parse(fs.readFileSync(new URL("../defaults.json", import.meta.url), "utf8"));
@@ -70,14 +70,17 @@ test("browser entry points cache-bust the current assets", () => {
   const index = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
   const ui = fs.readFileSync(new URL("../ui.js", import.meta.url), "utf8");
 
-  assert.match(index, /styles\.css\?v=1\.5\.1/);
-  assert.match(index, /ui\.js\?v=1\.5\.1/);
-  assert.match(ui, /model\.js\?v=1\.5\.1/);
-  assert.match(ui, /forge-models\.js\?v=1\.5\.1/);
-  assert.match(ui, /input-units\.js\?v=1\.5\.1/);
-  assert.match(ui, /space-model\.js\?v=1\.5\.1/);
+  assert.match(index, /styles\.css\?v=1\.6\.0/);
+  assert.match(index, /ui\.js\?v=1\.6\.0/);
+  assert.match(ui, /model\.js\?v=1\.6\.0/);
+  assert.match(ui, /forge-models\.js\?v=1\.6\.0/);
+  assert.match(ui, /input-units\.js\?v=1\.6\.0/);
+  assert.match(ui, /space-model\.js\?v=1\.6\.0/);
   assert.match(ui, /\$\{file\}\?v=\$\{ASSET_VERSION\}/);
   assert.match(ui, /<span>Total launch mass<\/span>/);
+  assert.match(ui, /Coolant-to-radiator temperature drop \(K\)/);
+  assert.match(ui, /Winning cooling configuration/);
+  assert.match(ui, /savings vs optimized direct/);
 });
 
 test("defaults ending in at least six zeros use editable millions", () => {
@@ -169,6 +172,41 @@ test("space input validation and sensitivity are usable", () => {
   assert.throws(() => normalizeSpaceInputs({ ...spaceDefaults, weather_availability: 1.1 }), /no more than 100%/);
   assert.throws(() => normalizeSpaceInputs({ ...spaceDefaults, eclipse_hours_per_day: 24 }), /less than 24 hours/);
   const results = spaceSensitivity(spaceDefaults);
-  assert.equal(results.length, 14);
+  assert.equal(results.length, 17);
   assert.ok(results.every(result => Number.isFinite(result.delta)));
+});
+
+
+test("two-sided radiator and heat-pump calculations match the worked example", () => {
+  const inputs = { ...spaceDefaults, radiator_radiation_efficiency: 0.86 * 0.8,
+    vendor_logic_power_w: 1000, vendor_hbm_stacks: 0, host_network_power_w_per_device: 0 };
+  const cooling = optimizeCooling(inputs);
+  const at80 = cooling.candidates.find(candidate => candidate.radiatorTemperatureC === 80);
+  assert.ok(Math.abs(cooling.direct.radiatorAreaM2 - 1.622) < 0.001);
+  assert.ok(Math.abs(at80.compressorPowerW - 503) < 1);
+  assert.ok(Math.abs(at80.radiatorAreaM2 - 1.239) < 0.001);
+});
+
+test("combined radiator radiation efficiency replaces separate overlapping factors", () => {
+  assert.equal(spaceDefaults.radiator_radiation_efficiency, 0.86);
+  assert.equal("radiator_emissivity" in spaceDefaults, false);
+  assert.equal("radiator_view_factor" in spaceDefaults, false);
+  const { radiator_radiation_efficiency: ignored, ...legacy } = spaceDefaults;
+  const migrated = optimizeCooling({ ...legacy, radiator_emissivity: 0.86, radiator_view_factor: 0.8 }).direct.radiatorAreaM2;
+  const equivalent = optimizeCooling({ ...spaceDefaults, radiator_radiation_efficiency: 0.86 * 0.8 }).direct.radiatorAreaM2;
+  assert.ok(Math.abs(equivalent - migrated) < 1e-12);
+  assert.throws(() => normalizeSpaceInputs({ ...spaceDefaults, radiator_radiation_efficiency: 1.01 }), /no more than 1.0/);
+});
+
+test("cooling strategy selection is bounded and feeds power, mass, and TCO", () => {
+  const direct = computeSpaceTCO({ ...spaceDefaults, cooling_strategy: "direct" });
+  const heatPump = computeSpaceTCO({ ...spaceDefaults, cooling_strategy: "heat_pump" });
+  const automatic = computeSpaceTCO({ ...spaceDefaults, cooling_strategy: "auto" });
+  assert.equal(direct.cooling.radiatorTemperatureC, 25);
+  assert.ok(heatPump.cooling.radiatorTemperatureC <= spaceDefaults.radiator_max_temperature_c);
+  assert.ok(heatPump.cooling.compressorPowerW > 0);
+  assert.ok(heatPump.yearly[0].heatPumpMassKg > 0);
+  assert.ok(heatPump.yearly[0].averagePowerW > direct.yearly[0].averagePowerW);
+  assert.ok(automatic.spaceTCO <= Math.min(direct.spaceTCO, heatPump.spaceTCO) + 1e-5);
+  assert.ok(Math.abs(automatic.cooling.directTCO - direct.spaceTCO) < 1e-5);
 });

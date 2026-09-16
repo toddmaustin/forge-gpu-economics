@@ -372,14 +372,19 @@ The terrestrial workload and hardware variables retain the definitions in the ea
 | $e_{battery}$ | Battery specific energy | 180 Wh/kg | Usable battery energy per kilogram. |
 | $c_{battery}$ | Battery cost | $1,000/kWh | Battery acquisition cost per kWh of capacity. |
 | $P_{bus}$ | Spacecraft bus power | 100 W/GPU | Continuous spacecraft-bus power allocated to each GPU. |
-| $q_{radiator}$ | Thermal radiation | 0.35 kW/m² | Radiator heat-rejection capability per square meter. |
-| $f_{view}$ | Radiator view factor | 0.8 | Effective radiator view factor used to derate heat rejection. |
+| $T_{cool}$ | Device coolant temperature | 30°C | Coolant supply temperature held fixed across strategies. |
+| $\Delta T_{direct}$ | Coolant-to-radiator temperature drop | 5 K | Difference between device coolant supply temperature and the effective emitting-surface temperature under direct cooling. |
+| $T_{rad,max}$ | Maximum radiator temperature | 100°C | Upper bound on the heat-pump search. |
+| $\eta_{HP}$ | Heat-pump efficiency | 40% | Fraction of Carnot cooling COP. |
+| $c_{HP}$ | Heat-pump cost | $5,000/kW cold | Hardware cost per cold-side capacity. |
+| $\mu_{HP}$ | Heat-pump mass | 15 kg/kW cold | Hardware mass per cold-side capacity. |
+| $\eta_{rad}$ | Radiator radiation efficiency | 86% | Combined loss factor for surface emissivity and effective view to cold space. |
 | $\mu_{radiator}$ | Radiator panel mass | 7 kg/m² | Deployed radiator mass per square meter. |
 | $c_{radiator}$ | Radiator cost | $10,000/m² | Radiator acquisition cost per square meter. |
 
 For compatibility with cached versions of the calculator, `space-defaults.json` also retains the deprecated `solar_specific_power_w_per_kg` value. Version 1.4.0 and later do not use that field; its default is equivalent to the two area-based defaults above.
 
-The defaults likewise retain the deprecated `thermal_rejection_w_per_m2` value for cached pre-1.5 calculator code. Version 1.5.0 and later use `radiator_thermal_radiation_kw_per_m2` instead.
+The defaults retain the deprecated `thermal_rejection_w_per_m2` and `radiator_thermal_radiation_kw_per_m2` values for cached pre-1.6 calculator code. Version 1.6.0 derives radiation from temperature and the combined radiation-efficiency term instead. Programmatic scenarios using the earlier separate `radiator_emissivity` and `radiator_view_factor` fields remain compatible: when the combined field is absent, FORGE uses their product.
 
 #### Communications, operations, and disposal
 
@@ -491,27 +496,35 @@ The illustrative sun-synchronous default assumes continuous sunlight and sets ec
 
 ### Radiative thermal system
 
-With no convective cooling, radiator-panel area is derived first from continuous peak IT heat, thermal radiation, and view factor (the factor of 1000 converts kW to W). Panel mass is then derived from that area and its areal mass:
+FORGE models a physical, edge-on-to-the-Sun panel with both faces radiating. Direct cooling uses the highest feasible passive temperature,
 
-$$A_{radiator}=\frac{P_{IT}}{1000q_{radiator}f_{view}}$$
+$$T_{rad,direct}=T_{cool}-\Delta T_{direct}.$$
 
-$$m_{radiator,total}=A_{radiator}\mu_{radiator}$$
+The default 5 K is not an extra cooling target. It is a compact representation of the temperature drops required to move heat from the device coolant through the direct loop, interfaces, and radiator structure to the emitting surface. A real design may change it through coolant flow rate, heat-exchanger and radiator construction, plumbing length, thermal-interface resistance, and heat load. Lower values imply a more effective—and potentially larger, heavier, or higher-pumping-power—thermal path. FORGE currently holds those unmodeled design costs constant, so this input should come from the proposed loop design rather than be treated as a free optimization variable. Temperature differences in kelvin and degrees Celsius have the same numeric value.
 
-$$C_{thermal}(t)=\Delta N_S(t)A_{radiator}c_{radiator}$$
+For each integer heat-pump radiator temperature above the coolant temperature and no higher than $T_{rad,max}$, the model uses 5 K cold- and hot-side heat-exchanger approaches:
 
-The 0.35 kW/m² default is 350 W/m² of gross thermal emission. By the Stefan-Boltzmann relation, $q=\epsilon\sigma T^4$, this is approximately the ideal blackbody flux at 280 K; an emissivity below one would require a higher radiator temperature to produce the same gross flux. The separate 0.8 view factor represents geometric obstruction and imperfect exposure to cold space, reducing modeled useful rejection to 280 W/m². At that effective rate, each continuous kilowatt of modeled heat requires about 3.57 m² of radiator and, at 7 kg/m², 25 kg of radiator mass.
+$$T_c=T_{cool}+273.15-5,\qquad T_h=T_{rad}+273.15+5$$
 
-The view factor is not a calculation of absorbed sunlight. The baseline assumes that attitude, placement, or sunshields keep the compute housings and radiators out of direct sunlight even though the solar arrays remain illuminated, and that the arrays reject their own waste heat locally. If a radiator or housing is sunlit, absorbed solar heat should be modeled separately using surface solar absorptivity, incident flux, and projected area; it can be comparable to the nominal rejection rate and materially increase required radiator area.
+$$COP_{cool}=\eta_{HP}\frac{T_c}{T_h-T_c},\qquad P_{HP}=\frac{Q_{cold}}{COP_{cool}}.$$
 
-The present first-order radiator equation includes only continuous peak IT power. It omits spacecraft-bus and power-conversion heat, the dissipated portion of communications power, absorbed solar and albedo loads, Earth infrared radiation, detailed surface emissivity and temperature, and thermal transients. These omissions are acceptable only as an explicitly shaded, first-pass economic scenario. Mission-level sizing should use a complete steady-state and transient thermal balance.
+The radiator rejects cold-side IT heat plus compressor power. Its physical panel area includes the two emitting faces explicitly:
+
+$$A_{radiator}=\frac{Q_{cold}+P_{HP}}{2\eta_{rad}\sigma(T_{rad}+273.15)^4}.$$
+
+For direct cooling, $P_{HP}=0$. Radiator mass and cost follow from physical area. A heat-pump candidate also adds $\mu_{HP}Q_{cold}/1000$ to launched and disposed mass and $c_{HP}Q_{cold}/1000$ to each equipment purchase. Compressor power increases solar-array and eclipse-battery requirements. The model evaluates these consequences over growth and replacement purchases, then chooses the lowest-TCO feasible strategy in `auto` mode; forced `direct` and `heat_pump` modes remain available for comparison.
+
+The summary reports strategy, selected temperature, compressor power, panel area, and savings against optimized direct cooling. It also checks whether the recommendation changes when heat-pump efficiency or cost moves by ±20%.
+
+The combined $\eta_{rad}$ term is appropriate here because emissivity and view-to-space previously entered the same equation only as a product; it is a thermal-radiation derating term, not a calculation of absorbed sunlight. The baseline assumes edge-on orientation, placement, or sunshields keep radiators out of direct sunlight. Sunlit designs must add absorbed solar heat separately. The first-order balance also omits bus and conversion heat, Earth infrared, albedo, and thermal transients; mission sizing requires a complete thermal analysis.
 
 The Fleet & hardware summary scales the per-GPU results by the required orbital fleet. It reports total launch mass, continuous peak IT power, effective solar generation after pointing and degradation losses, and peak IT heat rejection. Total solar-panel and radiator areas are converted from square meters to square kilometers.
 
 ### Launch mass and cost
 
-Per-GPU launched dry mass includes compute payload, bus/structure, shielding, propulsion, solar array, battery, and radiator mass:
+Per-GPU launched dry mass includes compute payload, bus/structure, shielding, propulsion, solar array, battery, radiator, and heat-pump mass:
 
-$$m_{dry}(t)=m_{payload}+m_{bus}+m_{shield}+m_{prop}+m_{solar}(t)+m_{battery}+m_{radiator,total}$$
+$$m_{dry}(t)=m_{payload}+m_{bus}+m_{shield}+m_{prop}+m_{solar}(t)+m_{battery}+m_{radiator,total}+m_{HP}$$
 
 Launch and end-of-life charges are:
 
