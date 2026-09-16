@@ -373,9 +373,9 @@ The terrestrial workload and hardware variables retain the definitions in the ea
 | $c_{battery}$ | Battery cost | $1,000/kWh | Battery acquisition cost per kWh of capacity. |
 | $P_{bus}$ | Spacecraft bus power | 100 W/GPU | Continuous spacecraft-bus power allocated to each GPU. |
 | $T_{cool}$ | Device coolant temperature | 30°C | Coolant supply temperature held fixed across strategies. |
-| $\Delta T_{direct}$ | Coolant-to-radiator temperature drop | 5 K | Difference between device coolant supply temperature and the effective emitting-surface temperature under direct cooling. |
+| $\Delta T_{direct}$ | Coolant-to-radiator temperature drop | 5 K | Assumed temperature difference between device coolant supply and the effective emitting surface for the unboosted radiator loop. |
 | $T_{rad,max}$ | Maximum radiator temperature | 100°C | Upper bound on the heat-pump search. |
-| $\eta_{HP}$ | Heat-pump efficiency | 40% | Fraction of Carnot cooling COP. |
+| $\eta_{HP}$ | Heat-pump performance | 40% | Fraction of the ideal Carnot cooling COP achieved by the modeled heat pump; this is not its COP or an energy-conversion efficiency. |
 | $c_{HP}$ | Heat-pump cost | $5,000/kW cold | Hardware cost per cold-side capacity. |
 | $\mu_{HP}$ | Heat-pump mass | 15 kg/kW cold | Hardware mass per cold-side capacity. |
 | $\eta_{rad}$ | Radiator radiation efficiency | 86% | Combined loss factor for surface emissivity and effective view to cold space. |
@@ -496,23 +496,44 @@ The illustrative sun-synchronous default assumes continuous sunlight and sets ec
 
 ### Radiative thermal system
 
-FORGE models a physical, edge-on-to-the-Sun panel with both faces radiating. Direct cooling uses the highest feasible passive temperature,
+In space, the thermal system cannot dispose of heat by convection to ambient air. It transports the IT equipment's heat to a radiator, which emits infrared radiation to space. FORGE compares two architectures:
+
+- **Unboosted radiator loop** (`direct` in the input and code): transports heat to a radiator without deliberately raising its temperature. This was previously described simply as “direct cooling”; “unboosted” is more precise because a real loop may still use circulation pumps.
+- **Temperature-lift radiator loop** (`heat_pump`): uses a heat pump to raise the radiator temperature. A hotter surface radiates more heat per unit area, but the compressor consumes power, adds its electrical input to the heat that must be rejected, and adds hardware mass and cost.
+
+The choice is therefore not “cooling versus no cooling.” It is an economic trade between a relatively large, cool radiator and a potentially smaller, hotter radiator with active temperature-lift equipment.
+
+FORGE models a physical, edge-on-to-the-Sun panel with both faces radiating. The unboosted loop uses the assumed effective emitting-surface temperature
 
 $$T_{rad,direct}=T_{cool}-\Delta T_{direct}.$$
 
-The default 5 K is not an extra cooling target. It is a compact representation of the temperature drops required to move heat from the device coolant through the direct loop, interfaces, and radiator structure to the emitting surface. A real design may change it through coolant flow rate, heat-exchanger and radiator construction, plumbing length, thermal-interface resistance, and heat load. Lower values imply a more effective—and potentially larger, heavier, or higher-pumping-power—thermal path. FORGE currently holds those unmodeled design costs constant, so this input should come from the proposed loop design rather than be treated as a free optimization variable. Temperature differences in kelvin and degrees Celsius have the same numeric value.
+The default 5 K is not an extra cooling target or a universal physical constant. It is a compact representation of the temperature differences required to carry heat from the device coolant through the loop, interfaces, and radiator structure to the effective emitting surface. Temperature *differences* are conventionally stated in kelvin: a 5 K difference has exactly the same numerical magnitude as a 5°C difference. With the default 30°C coolant and 5 K drop, the modeled radiator surface is therefore 25°C.
 
-For each integer heat-pump radiator temperature above the coolant temperature and no higher than $T_{rad,max}$, the model uses 5 K cold- and hot-side heat-exchanger approaches:
+This drop is a thermal-design input. In a first-order resistance model it behaves like $\Delta T=Q R_{thermal}$, so it depends on heat load as well as coolant flow rate and properties, heat-exchanger area, plumbing, thermal interfaces, heat spreading, and radiator construction. A higher value makes the modeled radiator colder and therefore larger, heavier, and more expensive. A lower value keeps the radiator closer to coolant temperature and reduces radiator area, but a real design may need larger heat exchangers or plumbing, better-conducting structures, higher flow, and more circulation-pump power to achieve it. FORGE does not price those unboosted-loop design changes, does not resolve coolant inlet and outlet temperatures separately, and does not optimize $\Delta T_{direct}$. It should therefore be supplied from a feasible conceptual loop design rather than lowered freely to improve the result.
 
-$$T_c=T_{cool}+273.15-5,\qquad T_h=T_{rad}+273.15+5$$
+For the temperature-lift loop, the model evaluates each integer radiator temperature above the coolant temperature and no higher than $T_{rad,max}$. Separate cold- and hot-side heat-exchanger approaches represent the finite temperature differences needed to transfer heat into and out of the heat pump:
 
-$$COP_{cool}=\eta_{HP}\frac{T_c}{T_h-T_c},\qquad P_{HP}=\frac{Q_{cold}}{COP_{cool}}.$$
+$$T_c=T_{cool}+273.15-\Delta T_{HX,cold},\qquad
+T_h=T_{rad}+273.15+\Delta T_{HX,hot}.$$
+
+The ideal Carnot cooling coefficient of performance (COP) is $T_c/(T_h-T_c)$. FORGE scales it by the heat-pump performance input and then calculates compressor power:
+
+$$COP_{cool}=\eta_{HP}\frac{T_c}{T_h-T_c},\qquad
+P_{HP}=\frac{Q_{cold}}{COP_{cool}}.$$
+
+COP is heat moved from the cold side divided by compressor electrical power; it can legitimately exceed one because the machine moves existing heat rather than converting electricity into heat removal. The default $\eta_{HP}=40\%$ means 40% of the temperature-dependent ideal COP, not a COP of 0.4 and not that 40% of electricity becomes cooling. Real fraction-of-Carnot performance depends on technology, scale, working fluid, temperature lift, heat exchangers, and operating point. A broad 30--50% range is useful for preliminary sensitivity cases, but flight-hardware studies should replace it with performance data across the proposed load and temperatures.
+
+Increasing the temperature lift makes the radiator emit more strongly and can reduce its area, but it lowers COP and raises compressor power. The model consequently searches the allowed temperatures rather than assuming the hottest radiator is best.
 
 The radiator rejects cold-side IT heat plus compressor power. Its physical panel area includes the two emitting faces explicitly:
 
 $$A_{radiator}=\frac{Q_{cold}+P_{HP}}{2\eta_{rad}\sigma(T_{rad}+273.15)^4}.$$
 
-For direct cooling, $P_{HP}=0$. Radiator mass and cost follow from physical area. A heat-pump candidate also adds $\mu_{HP}Q_{cold}/1000$ to launched and disposed mass and $c_{HP}Q_{cold}/1000$ to each equipment purchase. Compressor power increases solar-array and eclipse-battery requirements. The model evaluates these consequences over growth and replacement purchases, then chooses the lowest-TCO feasible strategy in `auto` mode; forced `direct` and `heat_pump` modes remain available for comparison.
+For the unboosted loop, $P_{HP}=0$. Radiator mass and cost follow from physical area. A heat-pump candidate also adds $\mu_{HP}Q_{cold}/1000$ to launched and disposed mass and $c_{HP}Q_{cold}/1000$ to each equipment purchase. Compressor power increases solar-array and eclipse-battery requirements.
+
+For every candidate, the cooling optimizer evaluates purchases over fleet growth and replacement. Its incremental objective includes radiator and heat-pump acquisition, solar-array and battery acquisition attributable to compressor power, and launch and end-of-life charges for radiator and heat-pump mass. It does not include launch and end-of-life charges for the candidate's incremental solar-array or battery mass in this selection objective, although those masses are included in the final TCO after a strategy is selected. In `auto` mode it compares the unboosted candidate with the lowest-objective feasible temperature-lift candidate; a tie selects the unboosted loop. Forced `direct` and `heat_pump` modes remain available for comparison.
+
+The unboosted loop is favored when radiator area and mass are inexpensive, coolant temperature is already high, solar or battery capacity is costly, or heat-pump performance is poor. The temperature-lift loop is favored when reducing radiator area or mass is especially valuable and compressor power, power-system capacity, and heat-pump hardware are comparatively inexpensive. The result is an economic optimum under the entered assumptions, not a declaration that either architecture is universally superior.
 
 The summary reports strategy, selected temperature, compressor power, panel area, and savings against optimized direct cooling. It also checks whether the recommendation changes when heat-pump efficiency or cost moves by ±20%.
 
