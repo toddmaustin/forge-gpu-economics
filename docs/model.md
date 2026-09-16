@@ -378,14 +378,13 @@ The terrestrial workload and hardware variables retain the definitions in the ea
 | $\eta_{HP}$ | Heat-pump efficiency | 40% | Fraction of Carnot cooling COP. |
 | $c_{HP}$ | Heat-pump cost | $5,000/kW cold | Hardware cost per cold-side capacity. |
 | $\mu_{HP}$ | Heat-pump mass | 15 kg/kW cold | Hardware mass per cold-side capacity. |
-| $\epsilon$ | Radiator emissivity | 0.86 | Thermal infrared emissivity of each radiator face. |
-| $f_{view}$ | Radiator view factor | 0.8 | Effective radiator view factor used to derate heat rejection. |
+| $\eta_{rad}$ | Radiator radiation efficiency | 86% | Combined loss factor for surface emissivity and effective view to cold space. |
 | $\mu_{radiator}$ | Radiator panel mass | 7 kg/m² | Deployed radiator mass per square meter. |
 | $c_{radiator}$ | Radiator cost | $10,000/m² | Radiator acquisition cost per square meter. |
 
 For compatibility with cached versions of the calculator, `space-defaults.json` also retains the deprecated `solar_specific_power_w_per_kg` value. Version 1.4.0 and later do not use that field; its default is equivalent to the two area-based defaults above.
 
-The defaults retain the deprecated `thermal_rejection_w_per_m2` and `radiator_thermal_radiation_kw_per_m2` values for cached pre-1.6 calculator code. Version 1.6.0 derives radiation from temperature and emissivity instead.
+The defaults retain the deprecated `thermal_rejection_w_per_m2` and `radiator_thermal_radiation_kw_per_m2` values for cached pre-1.6 calculator code. Version 1.6.0 derives radiation from temperature and the combined radiation-efficiency term instead. Programmatic scenarios using the earlier separate `radiator_emissivity` and `radiator_view_factor` fields remain compatible: when the combined field is absent, FORGE uses their product.
 
 #### Communications, operations, and disposal
 
@@ -509,13 +508,13 @@ $$COP_{cool}=\eta_{HP}\frac{T_c}{T_h-T_c},\qquad P_{HP}=\frac{Q_{cold}}{COP_{coo
 
 The radiator rejects cold-side IT heat plus compressor power. Its physical panel area includes the two emitting faces explicitly:
 
-$$A_{radiator}=\frac{Q_{cold}+P_{HP}}{2\epsilon f_{view}\sigma(T_{rad}+273.15)^4}.$$
+$$A_{radiator}=\frac{Q_{cold}+P_{HP}}{2\eta_{rad}\sigma(T_{rad}+273.15)^4}.$$
 
 For direct cooling, $P_{HP}=0$. Radiator mass and cost follow from physical area. A heat-pump candidate also adds $\mu_{HP}Q_{cold}/1000$ to launched and disposed mass and $c_{HP}Q_{cold}/1000$ to each equipment purchase. Compressor power increases solar-array and eclipse-battery requirements. The model evaluates these consequences over growth and replacement purchases, then chooses the lowest-TCO feasible strategy in `auto` mode; forced `direct` and `heat_pump` modes remain available for comparison.
 
 The summary reports strategy, selected temperature, compressor power, panel area, and savings against optimized direct cooling. It also checks whether the recommendation changes when heat-pump efficiency or cost moves by ±20%.
 
-The view factor is not a calculation of absorbed sunlight. The baseline assumes edge-on orientation, placement, or sunshields keep radiators out of direct sunlight. Sunlit designs must add absorbed solar heat. The first-order balance also omits bus and conversion heat, Earth infrared, albedo, and thermal transients; mission sizing requires a complete thermal analysis.
+The combined $\eta_{rad}$ term is appropriate here because emissivity and view-to-space previously entered the same equation only as a product; it is a thermal-radiation derating term, not a calculation of absorbed sunlight. The baseline assumes edge-on orientation, placement, or sunshields keep radiators out of direct sunlight. Sunlit designs must add absorbed solar heat separately. The first-order balance also omits bus and conversion heat, Earth infrared, albedo, and thermal transients; mission sizing requires a complete thermal analysis.
 
 The Fleet & hardware summary scales the per-GPU results by the required orbital fleet. It reports total launch mass, continuous peak IT power, effective solar generation after pointing and degradation losses, and peak IT heat rejection. Total solar-panel and radiator areas are converted from square meters to square kilometers.
 

@@ -175,12 +175,24 @@ test("space input validation and sensitivity are usable", () => {
 
 
 test("two-sided radiator and heat-pump calculations match the worked example", () => {
-  const inputs = { ...spaceDefaults, vendor_logic_power_w: 1000, vendor_hbm_stacks: 0, host_network_power_w_per_device: 0 };
+  const inputs = { ...spaceDefaults, radiator_radiation_efficiency: 0.86 * 0.8,
+    vendor_logic_power_w: 1000, vendor_hbm_stacks: 0, host_network_power_w_per_device: 0 };
   const cooling = optimizeCooling(inputs);
   const at80 = cooling.candidates.find(candidate => candidate.radiatorTemperatureC === 80);
   assert.ok(Math.abs(cooling.direct.radiatorAreaM2 - 1.622) < 0.001);
   assert.ok(Math.abs(at80.compressorPowerW - 503) < 1);
   assert.ok(Math.abs(at80.radiatorAreaM2 - 1.239) < 0.001);
+});
+
+test("combined radiator radiation efficiency replaces separate overlapping factors", () => {
+  assert.equal(spaceDefaults.radiator_radiation_efficiency, 0.86);
+  assert.equal("radiator_emissivity" in spaceDefaults, false);
+  assert.equal("radiator_view_factor" in spaceDefaults, false);
+  const { radiator_radiation_efficiency: ignored, ...legacy } = spaceDefaults;
+  const migrated = optimizeCooling({ ...legacy, radiator_emissivity: 0.86, radiator_view_factor: 0.8 }).direct.radiatorAreaM2;
+  const equivalent = optimizeCooling({ ...spaceDefaults, radiator_radiation_efficiency: 0.86 * 0.8 }).direct.radiatorAreaM2;
+  assert.ok(Math.abs(equivalent - migrated) < 1e-12);
+  assert.throws(() => normalizeSpaceInputs({ ...spaceDefaults, radiator_radiation_efficiency: 1.01 }), /no more than 1.0/);
 });
 
 test("cooling strategy selection is bounded and feeds power, mass, and TCO", () => {

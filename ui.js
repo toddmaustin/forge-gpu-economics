@@ -101,8 +101,8 @@ const spaceGroups = [
     ["direct_cooling_approach_k", "Direct-cooling approach (K)", "number", 1], ["radiator_max_temperature_c", "Maximum radiator temperature (°C)", "number", 1],
     ["heat_exchanger_cold_approach_k", "Cold-side heat-exchanger approach (K)", "number", 1], ["heat_exchanger_hot_approach_k", "Hot-side heat-exchanger approach (K)", "number", 1],
     ["heat_pump_efficiency", "Heat-pump Carnot efficiency", "percent", 1], ["heat_pump_mass_kg_per_kw_cooling", "Heat-pump mass / kW cooling (kg)", "number", 1],
-    ["heat_pump_cost_per_kw_cooling", "Heat-pump cost / kW cooling", "currency", 100], ["radiator_emissivity", "Radiator emissivity", "percent", 1],
-    ["radiator_view_factor", "Radiator view factor", "percent", 1], ["radiator_mass_kg_per_m2", "Radiator panel mass (kg/m²)", "number", 0.5], ["radiator_cost_per_m2", "Radiator cost / m²", "currency", 500]
+    ["heat_pump_cost_per_kw_cooling", "Heat-pump cost / kW cooling", "currency", 100], ["radiator_radiation_efficiency", "Radiator radiation efficiency", "percent", 1],
+    ["radiator_mass_kg_per_m2", "Radiator panel mass (kg/m²)", "number", 0.5], ["radiator_cost_per_m2", "Radiator cost / m²", "currency", 500]
   ]],
   ["Communications", [
     ["data_tb_per_gpu_day", "Data transferred / GPU-day (TB)", "number", 0.01], ["data_transfer_kwh_per_tb", "Transfer energy (kWh/TB)", "number", 0.1], ["weather_availability", "Ground-link weather availability", "percent", 1],

@@ -9,7 +9,7 @@ export const SPACE_MODEL_CONSIDERATIONS = Object.freeze([
   "Launch: provider, vehicle class, rideshare versus dedicated launch, insurance, schedule risk, and replenishment cadence.",
   "Orbital architecture: altitude and inclination, constellation size, station keeping, collision avoidance, radiation exposure, and end-of-life disposal.",
   "Power: solar-array and battery sizing at continuous peak compute, eclipse duty cycle, degradation, and pointing constraints.",
-  "Thermal: radiator area and mass, view factors, operating temperature, deployable structures, and the absence of convective cooling.",
+  "Thermal: radiator area and mass, effective radiation losses, operating temperature, deployable structures, and the absence of convective cooling.",
   "Compute hardware: radiation tolerance, shielding, fault recovery, useful performance, mass, volume, qualification, and replacement lifetime.",
   "Communications: ground-station and optical-link CapEx, spectrum and licensing, bandwidth, latency, weather availability, and data-transfer energy.",
   "Operations: mission control, cybersecurity, autonomous maintenance, spares, on-orbit servicing, telemetry, and staffing.",

@@ -30,10 +30,14 @@ const finite = (x, key) => {
 
 export function normalizeSpaceInputs(raw) {
   const x = { ...raw };
+  // Compatibility for pre-1.6 scenarios: only the product affected radiator area.
+  if (x.radiator_radiation_efficiency == null && x.radiator_emissivity != null && x.radiator_view_factor != null) {
+    x.radiator_radiation_efficiency = Number(x.radiator_emissivity) * Number(x.radiator_view_factor);
+  }
   Object.keys(x).filter(key => typeof x[key] === "number").forEach(key => { x[key] = finite(x, key); });
   for (const key of ["fleet_year1", "horizon_years", "space_useful_performance_ratio", "space_hardware_lifetime_years",
-    "solar_power_density_kw_per_m2", "solar_mass_kg_per_m2", "solar_pointing_efficiency", "radiator_emissivity",
-    "radiator_view_factor", "battery_specific_energy_wh_per_kg", "weather_availability", "heat_pump_efficiency"]) {
+    "solar_power_density_kw_per_m2", "solar_mass_kg_per_m2", "solar_pointing_efficiency", "radiator_radiation_efficiency",
+    "battery_specific_energy_wh_per_kg", "weather_availability", "heat_pump_efficiency"]) {
     if (!(x[key] > 0)) throw new Error(`${key} must be positive.`);
   }
   for (const key of ["demand_growth", "solar_annual_degradation", "solar_pointing_efficiency", "weather_availability"]) {
@@ -42,7 +46,7 @@ export function normalizeSpaceInputs(raw) {
   if (x.eclipse_hours_per_day >= 24) throw new Error("eclipse_hours_per_day must be less than 24 hours.");
   if (!["direct", "heat_pump", "auto"].includes(x.cooling_strategy)) throw new Error("cooling_strategy must be direct, heat_pump, or auto.");
   if (x.heat_pump_efficiency > 1) throw new Error("heat_pump_efficiency must be no more than 1.0.");
-  if (x.radiator_emissivity > 1 || x.radiator_view_factor > 1) throw new Error("Radiator emissivity and view factor must be no more than 1.0.");
+  if (x.radiator_radiation_efficiency > 1) throw new Error("radiator_radiation_efficiency must be no more than 1.0.");
   return x;
 }
 
@@ -64,7 +68,7 @@ export function optimizeCooling(raw, tcoForCandidate = () => 0) {
     }
     const rejectedHeatW = qColdW + compressorPowerW;
     // Physical edge-on panel area; both unobstructed emitting faces radiate.
-    const radiatorAreaM2 = rejectedHeatW / (2 * x.radiator_emissivity * x.radiator_view_factor *
+    const radiatorAreaM2 = rejectedHeatW / (2 * x.radiator_radiation_efficiency *
       STEFAN_BOLTZMANN * (radiatorTemperatureC + 273.15) ** 4);
     const result = { strategy, radiatorTemperatureC, qColdW, cop, compressorPowerW, rejectedHeatW, radiatorAreaM2 };
     result.tco = tcoForCandidate(result);
