@@ -36,6 +36,9 @@ button { border:1px solid var(--line); border-radius:9px; padding:10px 14px; bac
 .summary-grid div { padding:10px; background:var(--bg); border-radius:9px; }
 .summary-grid span { display:block; color:var(--muted); font-size:12px; }
 .summary-grid strong { display:block; margin-top:3px; }
+.summary-grid .result-highlight { grid-column:1/-1; border:1px solid var(--accent); background:var(--soft); }
+.summary-grid .result-highlight strong { color:var(--accent); font-size:16px; }
+.summary-grid .result-highlight small { display:block; margin-top:4px; color:var(--muted); line-height:1.4; }
 .pies { display:grid; grid-template-columns:1fr; gap:16px; }
 .pie-wrap { display:grid; grid-template-columns:150px 1fr; gap:16px; align-items:center; }
 .pie { position:relative; width:150px; height:150px; border-radius:50%; box-shadow:inset 0 0 0 1px rgba(0,0,0,.05); cursor:default; }

@@ -373,7 +373,7 @@ The terrestrial workload and hardware variables retain the definitions in the ea
 | $c_{battery}$ | Battery cost | $1,000/kWh | Battery acquisition cost per kWh of capacity. |
 | $P_{bus}$ | Spacecraft bus power | 100 W/GPU | Continuous spacecraft-bus power allocated to each GPU. |
 | $T_{cool}$ | Device coolant temperature | 30°C | Coolant supply temperature held fixed across strategies. |
-| $\Delta T_{direct}$ | Direct approach | 5 K | Effective loop-to-radiator temperature difference. |
+| $\Delta T_{direct}$ | Coolant-to-radiator temperature drop | 5 K | Difference between device coolant supply temperature and the effective emitting-surface temperature under direct cooling. |
 | $T_{rad,max}$ | Maximum radiator temperature | 100°C | Upper bound on the heat-pump search. |
 | $\eta_{HP}$ | Heat-pump efficiency | 40% | Fraction of Carnot cooling COP. |
 | $c_{HP}$ | Heat-pump cost | $5,000/kW cold | Hardware cost per cold-side capacity. |
@@ -499,6 +499,8 @@ The illustrative sun-synchronous default assumes continuous sunlight and sets ec
 FORGE models a physical, edge-on-to-the-Sun panel with both faces radiating. Direct cooling uses the highest feasible passive temperature,
 
 $$T_{rad,direct}=T_{cool}-\Delta T_{direct}.$$
+
+The default 5 K is not an extra cooling target. It is a compact representation of the temperature drops required to move heat from the device coolant through the direct loop, interfaces, and radiator structure to the emitting surface. A real design may change it through coolant flow rate, heat-exchanger and radiator construction, plumbing length, thermal-interface resistance, and heat load. Lower values imply a more effective—and potentially larger, heavier, or higher-pumping-power—thermal path. FORGE currently holds those unmodeled design costs constant, so this input should come from the proposed loop design rather than be treated as a free optimization variable. Temperature differences in kelvin and degrees Celsius have the same numeric value.
 
 For each integer heat-pump radiator temperature above the coolant temperature and no higher than $T_{rad,max}$, the model uses 5 K cold- and hot-side heat-exchanger approaches:
 

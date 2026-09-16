@@ -98,7 +98,7 @@ const spaceGroups = [
   ]],
   ["Radiative thermal system", [
     ["cooling_strategy", "Cooling strategy", "strategy", 1], ["device_coolant_temperature_c", "Device coolant temperature (°C)", "number", 1],
-    ["direct_cooling_approach_k", "Direct-cooling approach (K)", "number", 1], ["radiator_max_temperature_c", "Maximum radiator temperature (°C)", "number", 1],
+    ["direct_cooling_approach_k", "Coolant-to-radiator temperature drop (K)", "number", 1], ["radiator_max_temperature_c", "Maximum radiator temperature (°C)", "number", 1],
     ["heat_exchanger_cold_approach_k", "Cold-side heat-exchanger approach (K)", "number", 1], ["heat_exchanger_hot_approach_k", "Hot-side heat-exchanger approach (K)", "number", 1],
     ["heat_pump_efficiency", "Heat-pump Carnot efficiency", "percent", 1], ["heat_pump_mass_kg_per_kw_cooling", "Heat-pump mass / kW cooling (kg)", "number", 1],
     ["heat_pump_cost_per_kw_cooling", "Heat-pump cost / kW cooling", "currency", 100], ["radiator_radiation_efficiency", "Radiator radiation efficiency", "percent", 1],
@@ -360,11 +360,12 @@ function renderSpace() {
       computeSpaceTCO({ ...x, cooling_strategy: "auto", heat_pump_cost_per_kw_cooling: x.heat_pump_cost_per_kw_cooling * 1.2 }).cooling.strategy
     ];
     const strategyLabel = z.cooling.strategy === "heat_pump" ? "Heat pump" : "Direct";
+    const coolingResultLabel = x.cooling_strategy === "auto" ? "Winning cooling configuration" : "Selected cooling configuration";
     const sensitivityLabel = new Set(coolingSensitivity).size === 1
       ? `Stable (${coolingSensitivity[0] === "heat_pump" ? "heat pump" : "direct"}) at ±20% HP efficiency/cost`
       : "Winner changes at ±20% HP efficiency/cost";
     $("#fleet-summary").innerHTML = `<div><span>Year-1 workload</span><strong>${num(y.workloadGPUs)} GPU-eq.</strong></div><div><span>Required orbital GPUs</span><strong>${num(y.requiredGPUs)}</strong></div>
-      <div><span>Selected cooling</span><strong>${strategyLabel}</strong></div><div><span>Radiator temperature</span><strong>${z.cooling.radiatorTemperatureC.toFixed(0)} °C</strong></div>
+      <div class="result-highlight"><span>${coolingResultLabel}</span><strong>${strategyLabel} cooling · ${z.cooling.radiatorTemperatureC.toFixed(0)} °C radiator</strong><small>${power(z.cooling.compressorPowerW)} compressor · ${z.cooling.radiatorAreaM2.toFixed(2)} m² radiator/GPU · ${money(z.cooling.tcoSavingsVsDirect)} savings vs optimized direct</small></div>
       <div><span>Heat-pump compressor / GPU</span><strong>${power(z.cooling.compressorPowerW)}</strong></div><div><span>TCO savings vs optimized direct</span><strong>${money(z.cooling.tcoSavingsVsDirect)}</strong></div>
       <div><span>Cooling recommendation sensitivity</span><strong>${sensitivityLabel}</strong></div>
       <div><span>Useful service availability</span><strong>${(100*x.space_useful_performance_ratio*x.weather_availability).toFixed(1)}%</strong></div><div><span>Peak IT power / GPU</span><strong>${power(y.itPowerW)}</strong></div>

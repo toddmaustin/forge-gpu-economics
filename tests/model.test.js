@@ -78,6 +78,9 @@ test("browser entry points cache-bust the current assets", () => {
   assert.match(ui, /space-model\.js\?v=1\.6\.0/);
   assert.match(ui, /\$\{file\}\?v=\$\{ASSET_VERSION\}/);
   assert.match(ui, /<span>Total launch mass<\/span>/);
+  assert.match(ui, /Coolant-to-radiator temperature drop \(K\)/);
+  assert.match(ui, /Winning cooling configuration/);
+  assert.match(ui, /savings vs optimized direct/);
 });
 
 test("defaults ending in at least six zeros use editable millions", () => {
