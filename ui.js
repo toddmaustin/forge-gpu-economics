@@ -1,9 +1,9 @@
-import { computeTCO, breakEvenFleet, sensitivity } from "./model.js?v=1.5.1";
-import { DEFAULT_MODEL_ID, FORGE_MODELS, getForgeModel } from "./forge-models.js?v=1.5.1";
-import { inputPresentation, valueFromInput } from "./input-units.js?v=1.5.1";
-import { computeSpaceTCO, spaceSensitivity } from "./space-model.js?v=1.5.1";
+import { computeTCO, breakEvenFleet, sensitivity } from "./model.js?v=1.6.0";
+import { DEFAULT_MODEL_ID, FORGE_MODELS, getForgeModel } from "./forge-models.js?v=1.6.0";
+import { inputPresentation, valueFromInput } from "./input-units.js?v=1.6.0";
+import { computeSpaceTCO, spaceSensitivity } from "./space-model.js?v=1.6.0";
 
-const ASSET_VERSION = "1.5.1";
+const ASSET_VERSION = "1.6.0";
 
 const $ = s => document.querySelector(s);
 const money = x => {
@@ -97,7 +97,12 @@ const spaceGroups = [
     ["eclipse_hours_per_day", "Eclipse hours / day (sun-sync default: 0)", "number", 0.1], ["battery_specific_energy_wh_per_kg", "Battery specific energy (Wh/kg)", "number", 10], ["battery_cost_per_kwh", "Battery cost / kWh", "currency", 100]
   ]],
   ["Radiative thermal system", [
-    ["radiator_thermal_radiation_kw_per_m2", "Thermal radiation (kW/m²)", "number", 0.01], ["radiator_view_factor", "Radiator view factor", "percent", 1], ["radiator_mass_kg_per_m2", "Radiator panel mass (kg/m²)", "number", 0.5], ["radiator_cost_per_m2", "Radiator cost / m²", "currency", 500]
+    ["cooling_strategy", "Cooling strategy", "strategy", 1], ["device_coolant_temperature_c", "Device coolant temperature (°C)", "number", 1],
+    ["direct_cooling_approach_k", "Direct-cooling approach (K)", "number", 1], ["radiator_max_temperature_c", "Maximum radiator temperature (°C)", "number", 1],
+    ["heat_exchanger_cold_approach_k", "Cold-side heat-exchanger approach (K)", "number", 1], ["heat_exchanger_hot_approach_k", "Hot-side heat-exchanger approach (K)", "number", 1],
+    ["heat_pump_efficiency", "Heat-pump Carnot efficiency", "percent", 1], ["heat_pump_mass_kg_per_kw_cooling", "Heat-pump mass / kW cooling (kg)", "number", 1],
+    ["heat_pump_cost_per_kw_cooling", "Heat-pump cost / kW cooling", "currency", 100], ["radiator_radiation_efficiency", "Radiator radiation efficiency", "percent", 1],
+    ["radiator_mass_kg_per_m2", "Radiator panel mass (kg/m²)", "number", 0.5], ["radiator_cost_per_m2", "Radiator cost / m²", "currency", 500]
   ]],
   ["Communications", [
     ["data_tb_per_gpu_day", "Data transferred / GPU-day (TB)", "number", 0.01], ["data_transfer_kwh_per_tb", "Transfer energy (kWh/TB)", "number", 0.1], ["weather_availability", "Ground-link weather availability", "percent", 1],
@@ -166,6 +171,12 @@ function buildControls() {
     for (const [key, label, kind, step] of fields) {
       const wrap = document.createElement("label");
       wrap.className = "control";
+      if (kind === "strategy") {
+        wrap.innerHTML = `<span>${label}</span><select data-key="${key}"><option value="auto">Auto (lowest TCO)</option><option value="direct">Direct</option><option value="heat_pump">Heat pump</option></select>`;
+        wrap.querySelector("select").value = defaults[key];
+        grid.appendChild(wrap);
+        continue;
+      }
       const presentation = inputPresentation(defaults[key], step);
       const unitSuffix = kind === "percent" || kind === "percentage" ? " (%)" : kind === "years" ? " (years)" : kind === "ratio" ? " (×)" : "";
       const bounds = kind === "percentage" ? ' min="0" max="100"' : "";
@@ -174,12 +185,12 @@ function buildControls() {
     }
     root.appendChild(section);
   }
-  root.querySelectorAll("input").forEach(i => i.addEventListener("input", render));
+  root.querySelectorAll("input, select").forEach(i => i.addEventListener("input", render));
 }
 
 function currentInputs() {
   const x = { ...defaults };
-  document.querySelectorAll("[data-key]").forEach(i => x[i.dataset.key] = readValue(i));
+  document.querySelectorAll("[data-key]").forEach(i => x[i.dataset.key] = i.tagName === "SELECT" ? i.value : readValue(i));
   return x;
 }
 
@@ -342,7 +353,20 @@ function renderSpace() {
     $("#break-even").textContent = "—";
     $("#break-even-detail").textContent = "not calculated in first draft";
     const y = z.yearly[0];
+    const coolingSensitivity = [
+      computeSpaceTCO({ ...x, cooling_strategy: "auto", heat_pump_efficiency: x.heat_pump_efficiency * 0.8 }).cooling.strategy,
+      computeSpaceTCO({ ...x, cooling_strategy: "auto", heat_pump_efficiency: Math.min(1, x.heat_pump_efficiency * 1.2) }).cooling.strategy,
+      computeSpaceTCO({ ...x, cooling_strategy: "auto", heat_pump_cost_per_kw_cooling: x.heat_pump_cost_per_kw_cooling * 0.8 }).cooling.strategy,
+      computeSpaceTCO({ ...x, cooling_strategy: "auto", heat_pump_cost_per_kw_cooling: x.heat_pump_cost_per_kw_cooling * 1.2 }).cooling.strategy
+    ];
+    const strategyLabel = z.cooling.strategy === "heat_pump" ? "Heat pump" : "Direct";
+    const sensitivityLabel = new Set(coolingSensitivity).size === 1
+      ? `Stable (${coolingSensitivity[0] === "heat_pump" ? "heat pump" : "direct"}) at ±20% HP efficiency/cost`
+      : "Winner changes at ±20% HP efficiency/cost";
     $("#fleet-summary").innerHTML = `<div><span>Year-1 workload</span><strong>${num(y.workloadGPUs)} GPU-eq.</strong></div><div><span>Required orbital GPUs</span><strong>${num(y.requiredGPUs)}</strong></div>
+      <div><span>Selected cooling</span><strong>${strategyLabel}</strong></div><div><span>Radiator temperature</span><strong>${z.cooling.radiatorTemperatureC.toFixed(0)} °C</strong></div>
+      <div><span>Heat-pump compressor / GPU</span><strong>${power(z.cooling.compressorPowerW)}</strong></div><div><span>TCO savings vs optimized direct</span><strong>${money(z.cooling.tcoSavingsVsDirect)}</strong></div>
+      <div><span>Cooling recommendation sensitivity</span><strong>${sensitivityLabel}</strong></div>
       <div><span>Useful service availability</span><strong>${(100*x.space_useful_performance_ratio*x.weather_availability).toFixed(1)}%</strong></div><div><span>Peak IT power / GPU</span><strong>${power(y.itPowerW)}</strong></div>
       <div><span>IT power consumption</span><strong>${power(y.totalITPowerW)}</strong></div><div><span>Total solar power generation</span><strong>${power(y.totalSolarPowerW)}</strong></div>
       <div><span>Solar panel size</span><strong>${y.totalSolarAreaKm2.toFixed(3)} km²</strong></div><div><span>Total heat radiation</span><strong>${power(y.totalHeatRadiationW)}</strong></div>
