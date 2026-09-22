@@ -1,6 +1,6 @@
 # FORGE — Fabricate OR buy Gpu Economics
 
-**FORGE** is an open, browser-based economic model with selectable comparisons for **building custom accelerators vs. buying vendor GPUs** and **terrestrial vs. space-based data centers**.
+**FORGE** is an open, browser-based economic model for **vendor-based data centers**, **custom-accelerator-based data centers**, and **space-based data centers**. Its selectable comparisons evaluate building custom accelerators vs. buying vendor GPUs and terrestrial vs. space-based deployments.
 
 The terrestrial/space view provides a first-draft, parameterized orbital architecture covering launch mass, resilience, solar and battery power, radiative thermal systems, communications, operations, replacement, and disposal. Its terrestrial baseline directly uses the existing Vendor IT calculation, and each comparison has a one-click reset to illustrative defaults.
 
@@ -8,6 +8,9 @@ It connects computer-architecture assumptions — useful performance, die size/y
 
 ## What FORGE models
 
+- Vendor-based data centers
+- Custom-accelerator-based data centers
+- Space-based data centers
 - Vendor-GPU fleet growth and acquisition cost
 - Custom accelerator fleet normalization by useful performance
 - Wafer/die economics and yield
